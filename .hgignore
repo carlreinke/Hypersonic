@@ -1,0 +1,6 @@
+syntax: glob
+.vs/
+Hypersonic/bin/
+Hypersonic/obj/
+Hypersonic.Tests/bin/
+Hypersonic.Tests/obj/

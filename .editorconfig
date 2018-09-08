@@ -1,0 +1,12 @@
+root = true
+
+[*]
+end_of_line = crlf
+
+[*.cs]
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+csharp_indent_labels = one_less_than_current
