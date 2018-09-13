@@ -24,154 +24,55 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlRootAttribute("ffprobe", Namespace="http://www.ffmpeg.org/schema/ffprobe", IsNullable=false)]
     public partial class ffprobeType {
         
-        private programVersionType program_versionField;
-        
-        private libraryVersionType[] library_versionsField;
-        
-        private pixelFormatType[] pixel_formatsField;
-        
-        private packetType[] packetsField;
-        
-        private framesType framesField;
-        
-        private packetsAndFramesType packets_and_framesField;
-        
-        private programType[] programsField;
-        
-        private streamType[] streamsField;
-        
-        private chapterType[] chaptersField;
-        
-        private formatType formatField;
-        
-        private errorType errorField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public programVersionType program_version {
-            get {
-                return this.program_versionField;
-            }
-            set {
-                this.program_versionField = value;
-            }
-        }
+        public programVersionType program_version;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("library_version", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public libraryVersionType[] library_versions {
-            get {
-                return this.library_versionsField;
-            }
-            set {
-                this.library_versionsField = value;
-            }
-        }
+        public libraryVersionType[] library_versions;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("pixel_format", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public pixelFormatType[] pixel_formats {
-            get {
-                return this.pixel_formatsField;
-            }
-            set {
-                this.pixel_formatsField = value;
-            }
-        }
+        public pixelFormatType[] pixel_formats;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("packet", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public packetType[] packets {
-            get {
-                return this.packetsField;
-            }
-            set {
-                this.packetsField = value;
-            }
-        }
+        public packetType[] packets;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public framesType frames {
-            get {
-                return this.framesField;
-            }
-            set {
-                this.framesField = value;
-            }
-        }
+        public framesType frames;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public packetsAndFramesType packets_and_frames {
-            get {
-                return this.packets_and_framesField;
-            }
-            set {
-                this.packets_and_framesField = value;
-            }
-        }
+        public packetsAndFramesType packets_and_frames;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("program", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public programType[] programs {
-            get {
-                return this.programsField;
-            }
-            set {
-                this.programsField = value;
-            }
-        }
+        public programType[] programs;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("stream", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public streamType[] streams {
-            get {
-                return this.streamsField;
-            }
-            set {
-                this.streamsField = value;
-            }
-        }
+        public streamType[] streams;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("chapter", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public chapterType[] chapters {
-            get {
-                return this.chaptersField;
-            }
-            set {
-                this.chaptersField = value;
-            }
-        }
+        public chapterType[] chapters;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public formatType format {
-            get {
-                return this.formatField;
-            }
-            set {
-                this.formatField = value;
-            }
-        }
+        public formatType format;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public errorType error {
-            get {
-                return this.errorField;
-            }
-            set {
-                this.errorField = value;
-            }
-        }
+        public errorType error;
     }
     
     /// <remarks/>
@@ -182,83 +83,29 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class programVersionType {
         
-        private string versionField;
-        
-        private string copyrightField;
-        
-        private string build_dateField;
-        
-        private string build_timeField;
-        
-        private string compiler_identField;
-        
-        private string configurationField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string version;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string version {
-            get {
-                return this.versionField;
-            }
-            set {
-                this.versionField = value;
-            }
-        }
+        public string copyright;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string copyright {
-            get {
-                return this.copyrightField;
-            }
-            set {
-                this.copyrightField = value;
-            }
-        }
+        public string build_date;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string build_date {
-            get {
-                return this.build_dateField;
-            }
-            set {
-                this.build_dateField = value;
-            }
-        }
+        public string build_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string build_time {
-            get {
-                return this.build_timeField;
-            }
-            set {
-                this.build_timeField = value;
-            }
-        }
+        public string compiler_ident;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string compiler_ident {
-            get {
-                return this.compiler_identField;
-            }
-            set {
-                this.compiler_identField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string configuration {
-            get {
-                return this.configurationField;
-            }
-            set {
-                this.configurationField = value;
-            }
-        }
+        public string configuration;
     }
     
     /// <remarks/>
@@ -269,31 +116,13 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class errorType {
         
-        private int codeField;
-        
-        private string stringField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int code;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int code {
-            get {
-                return this.codeField;
-            }
-            set {
-                this.codeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string @string {
-            get {
-                return this.stringField;
-            }
-            set {
-                this.stringField = value;
-            }
-        }
+        public string @string;
     }
     
     /// <remarks/>
@@ -304,213 +133,69 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class formatType {
         
-        private tagType[] tagField;
-        
-        private string filenameField;
-        
-        private int nb_streamsField;
-        
-        private int nb_programsField;
-        
-        private string format_nameField;
-        
-        private string format_long_nameField;
-        
-        private float start_timeField;
-        
-        private bool start_timeFieldSpecified;
-        
-        private float durationField;
-        
-        private bool durationFieldSpecified;
-        
-        private long sizeField;
-        
-        private bool sizeFieldSpecified;
-        
-        private long bit_rateField;
-        
-        private bool bit_rateFieldSpecified;
-        
-        private int probe_scoreField;
-        
-        private bool probe_scoreFieldSpecified;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("tag", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public tagType[] tag {
-            get {
-                return this.tagField;
-            }
-            set {
-                this.tagField = value;
-            }
-        }
+        public tagType[] tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string filename {
-            get {
-                return this.filenameField;
-            }
-            set {
-                this.filenameField = value;
-            }
-        }
+        public string filename;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_streams {
-            get {
-                return this.nb_streamsField;
-            }
-            set {
-                this.nb_streamsField = value;
-            }
-        }
+        public int nb_streams;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_programs {
-            get {
-                return this.nb_programsField;
-            }
-            set {
-                this.nb_programsField = value;
-            }
-        }
+        public int nb_programs;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string format_name {
-            get {
-                return this.format_nameField;
-            }
-            set {
-                this.format_nameField = value;
-            }
-        }
+        public string format_name;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string format_long_name {
-            get {
-                return this.format_long_nameField;
-            }
-            set {
-                this.format_long_nameField = value;
-            }
-        }
+        public string format_long_name;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float start_time {
-            get {
-                return this.start_timeField;
-            }
-            set {
-                this.start_timeField = value;
-            }
-        }
+        public float start_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_timeSpecified {
-            get {
-                return this.start_timeFieldSpecified;
-            }
-            set {
-                this.start_timeFieldSpecified = value;
-            }
-        }
+        public bool start_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float duration {
-            get {
-                return this.durationField;
-            }
-            set {
-                this.durationField = value;
-            }
-        }
+        public float duration;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool durationSpecified {
-            get {
-                return this.durationFieldSpecified;
-            }
-            set {
-                this.durationFieldSpecified = value;
-            }
-        }
+        public bool durationSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long size {
-            get {
-                return this.sizeField;
-            }
-            set {
-                this.sizeField = value;
-            }
-        }
+        public long size;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool sizeSpecified {
-            get {
-                return this.sizeFieldSpecified;
-            }
-            set {
-                this.sizeFieldSpecified = value;
-            }
-        }
+        public bool sizeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long bit_rate {
-            get {
-                return this.bit_rateField;
-            }
-            set {
-                this.bit_rateField = value;
-            }
-        }
+        public long bit_rate;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool bit_rateSpecified {
-            get {
-                return this.bit_rateFieldSpecified;
-            }
-            set {
-                this.bit_rateFieldSpecified = value;
-            }
-        }
+        public bool bit_rateSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int probe_score {
-            get {
-                return this.probe_scoreField;
-            }
-            set {
-                this.probe_scoreField = value;
-            }
-        }
+        public int probe_score;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool probe_scoreSpecified {
-            get {
-                return this.probe_scoreFieldSpecified;
-            }
-            set {
-                this.probe_scoreFieldSpecified = value;
-            }
-        }
+        public bool probe_scoreSpecified;
     }
     
     /// <remarks/>
@@ -521,31 +206,13 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class tagType {
         
-        private string keyField;
-        
-        private string valueField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string key;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string key {
-            get {
-                return this.keyField;
-            }
-            set {
-                this.keyField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string value {
-            get {
-                return this.valueField;
-            }
-            set {
-                this.valueField = value;
-            }
-        }
+        public string value;
     }
     
     /// <remarks/>
@@ -556,109 +223,37 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class chapterType {
         
-        private tagType[] tagField;
-        
-        private int idField;
-        
-        private string time_baseField;
-        
-        private int startField;
-        
-        private float start_timeField;
-        
-        private bool start_timeFieldSpecified;
-        
-        private int endField;
-        
-        private float end_timeField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("tag", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public tagType[] tag {
-            get {
-                return this.tagField;
-            }
-            set {
-                this.tagField = value;
-            }
-        }
+        public tagType[] tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int id {
-            get {
-                return this.idField;
-            }
-            set {
-                this.idField = value;
-            }
-        }
+        public int id;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string time_base {
-            get {
-                return this.time_baseField;
-            }
-            set {
-                this.time_baseField = value;
-            }
-        }
+        public string time_base;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int start {
-            get {
-                return this.startField;
-            }
-            set {
-                this.startField = value;
-            }
-        }
+        public int start;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float start_time {
-            get {
-                return this.start_timeField;
-            }
-            set {
-                this.start_timeField = value;
-            }
-        }
+        public float start_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_timeSpecified {
-            get {
-                return this.start_timeFieldSpecified;
-            }
-            set {
-                this.start_timeFieldSpecified = value;
-            }
-        }
+        public bool start_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int end {
-            get {
-                return this.endField;
-            }
-            set {
-                this.endField = value;
-            }
-        }
+        public int end;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float end_time {
-            get {
-                return this.end_timeField;
-            }
-            set {
-                this.end_timeField = value;
-            }
-        }
+        public float end_time;
     }
     
     /// <remarks/>
@@ -669,161 +264,53 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class streamDispositionType {
         
-        private int defaultField;
-        
-        private int dubField;
-        
-        private int originalField;
-        
-        private int commentField;
-        
-        private int lyricsField;
-        
-        private int karaokeField;
-        
-        private int forcedField;
-        
-        private int hearing_impairedField;
-        
-        private int visual_impairedField;
-        
-        private int clean_effectsField;
-        
-        private int attached_picField;
-        
-        private int timed_thumbnailsField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int @default;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int @default {
-            get {
-                return this.defaultField;
-            }
-            set {
-                this.defaultField = value;
-            }
-        }
+        public int dub;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int dub {
-            get {
-                return this.dubField;
-            }
-            set {
-                this.dubField = value;
-            }
-        }
+        public int original;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int original {
-            get {
-                return this.originalField;
-            }
-            set {
-                this.originalField = value;
-            }
-        }
+        public int comment;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int comment {
-            get {
-                return this.commentField;
-            }
-            set {
-                this.commentField = value;
-            }
-        }
+        public int lyrics;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int lyrics {
-            get {
-                return this.lyricsField;
-            }
-            set {
-                this.lyricsField = value;
-            }
-        }
+        public int karaoke;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int karaoke {
-            get {
-                return this.karaokeField;
-            }
-            set {
-                this.karaokeField = value;
-            }
-        }
+        public int forced;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int forced {
-            get {
-                return this.forcedField;
-            }
-            set {
-                this.forcedField = value;
-            }
-        }
+        public int hearing_impaired;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int hearing_impaired {
-            get {
-                return this.hearing_impairedField;
-            }
-            set {
-                this.hearing_impairedField = value;
-            }
-        }
+        public int visual_impaired;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int visual_impaired {
-            get {
-                return this.visual_impairedField;
-            }
-            set {
-                this.visual_impairedField = value;
-            }
-        }
+        public int clean_effects;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int clean_effects {
-            get {
-                return this.clean_effectsField;
-            }
-            set {
-                this.clean_effectsField = value;
-            }
-        }
+        public int attached_pic;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int attached_pic {
-            get {
-                return this.attached_picField;
-            }
-            set {
-                this.attached_picField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int timed_thumbnails {
-            get {
-                return this.timed_thumbnailsField;
-            }
-            set {
-                this.timed_thumbnailsField = value;
-            }
-        }
+        public int timed_thumbnails;
     }
     
     /// <remarks/>
@@ -834,903 +321,282 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class streamType {
         
-        private streamDispositionType dispositionField;
-        
-        private tagType[] tagField;
-        
-        private packetSideDataType[] side_data_listField;
-        
-        private int indexField;
-        
-        private string codec_nameField;
-        
-        private string codec_long_nameField;
-        
-        private string profileField;
-        
-        private string codec_typeField;
-        
-        private string codec_time_baseField;
-        
-        private string codec_tagField;
-        
-        private string codec_tag_stringField;
-        
-        private string extradataField;
-        
-        private string extradata_hashField;
-        
-        private int widthField;
-        
-        private bool widthFieldSpecified;
-        
-        private int heightField;
-        
-        private bool heightFieldSpecified;
-        
-        private int coded_widthField;
-        
-        private bool coded_widthFieldSpecified;
-        
-        private int coded_heightField;
-        
-        private bool coded_heightFieldSpecified;
-        
-        private int has_b_framesField;
-        
-        private bool has_b_framesFieldSpecified;
-        
-        private string sample_aspect_ratioField;
-        
-        private string display_aspect_ratioField;
-        
-        private string pix_fmtField;
-        
-        private int levelField;
-        
-        private bool levelFieldSpecified;
-        
-        private string color_rangeField;
-        
-        private string color_spaceField;
-        
-        private string color_transferField;
-        
-        private string color_primariesField;
-        
-        private string chroma_locationField;
-        
-        private string field_orderField;
-        
-        private string timecodeField;
-        
-        private int refsField;
-        
-        private bool refsFieldSpecified;
-        
-        private string sample_fmtField;
-        
-        private int sample_rateField;
-        
-        private bool sample_rateFieldSpecified;
-        
-        private int channelsField;
-        
-        private bool channelsFieldSpecified;
-        
-        private string channel_layoutField;
-        
-        private int bits_per_sampleField;
-        
-        private bool bits_per_sampleFieldSpecified;
-        
-        private string idField;
-        
-        private string r_frame_rateField;
-        
-        private string avg_frame_rateField;
-        
-        private string time_baseField;
-        
-        private long start_ptsField;
-        
-        private bool start_ptsFieldSpecified;
-        
-        private float start_timeField;
-        
-        private bool start_timeFieldSpecified;
-        
-        private long duration_tsField;
-        
-        private bool duration_tsFieldSpecified;
-        
-        private float durationField;
-        
-        private bool durationFieldSpecified;
-        
-        private int bit_rateField;
-        
-        private bool bit_rateFieldSpecified;
-        
-        private int max_bit_rateField;
-        
-        private bool max_bit_rateFieldSpecified;
-        
-        private int bits_per_raw_sampleField;
-        
-        private bool bits_per_raw_sampleFieldSpecified;
-        
-        private int nb_framesField;
-        
-        private bool nb_framesFieldSpecified;
-        
-        private int nb_read_framesField;
-        
-        private bool nb_read_framesFieldSpecified;
-        
-        private int nb_read_packetsField;
-        
-        private bool nb_read_packetsFieldSpecified;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public streamDispositionType disposition {
-            get {
-                return this.dispositionField;
-            }
-            set {
-                this.dispositionField = value;
-            }
-        }
+        public streamDispositionType disposition;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("tag", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public tagType[] tag {
-            get {
-                return this.tagField;
-            }
-            set {
-                this.tagField = value;
-            }
-        }
+        public tagType[] tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("side_data", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public packetSideDataType[] side_data_list {
-            get {
-                return this.side_data_listField;
-            }
-            set {
-                this.side_data_listField = value;
-            }
-        }
+        public packetSideDataType[] side_data_list;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int index {
-            get {
-                return this.indexField;
-            }
-            set {
-                this.indexField = value;
-            }
-        }
+        public int index;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_name {
-            get {
-                return this.codec_nameField;
-            }
-            set {
-                this.codec_nameField = value;
-            }
-        }
+        public string codec_name;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_long_name {
-            get {
-                return this.codec_long_nameField;
-            }
-            set {
-                this.codec_long_nameField = value;
-            }
-        }
+        public string codec_long_name;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string profile {
-            get {
-                return this.profileField;
-            }
-            set {
-                this.profileField = value;
-            }
-        }
+        public string profile;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_type {
-            get {
-                return this.codec_typeField;
-            }
-            set {
-                this.codec_typeField = value;
-            }
-        }
+        public string codec_type;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_time_base {
-            get {
-                return this.codec_time_baseField;
-            }
-            set {
-                this.codec_time_baseField = value;
-            }
-        }
+        public string codec_time_base;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_tag {
-            get {
-                return this.codec_tagField;
-            }
-            set {
-                this.codec_tagField = value;
-            }
-        }
+        public string codec_tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_tag_string {
-            get {
-                return this.codec_tag_stringField;
-            }
-            set {
-                this.codec_tag_stringField = value;
-            }
-        }
+        public string codec_tag_string;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string extradata {
-            get {
-                return this.extradataField;
-            }
-            set {
-                this.extradataField = value;
-            }
-        }
+        public string extradata;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string extradata_hash {
-            get {
-                return this.extradata_hashField;
-            }
-            set {
-                this.extradata_hashField = value;
-            }
-        }
+        public string extradata_hash;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int width {
-            get {
-                return this.widthField;
-            }
-            set {
-                this.widthField = value;
-            }
-        }
+        public int width;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool widthSpecified {
-            get {
-                return this.widthFieldSpecified;
-            }
-            set {
-                this.widthFieldSpecified = value;
-            }
-        }
+        public bool widthSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int height {
-            get {
-                return this.heightField;
-            }
-            set {
-                this.heightField = value;
-            }
-        }
+        public int height;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool heightSpecified {
-            get {
-                return this.heightFieldSpecified;
-            }
-            set {
-                this.heightFieldSpecified = value;
-            }
-        }
+        public bool heightSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int coded_width {
-            get {
-                return this.coded_widthField;
-            }
-            set {
-                this.coded_widthField = value;
-            }
-        }
+        public int coded_width;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool coded_widthSpecified {
-            get {
-                return this.coded_widthFieldSpecified;
-            }
-            set {
-                this.coded_widthFieldSpecified = value;
-            }
-        }
+        public bool coded_widthSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int coded_height {
-            get {
-                return this.coded_heightField;
-            }
-            set {
-                this.coded_heightField = value;
-            }
-        }
+        public int coded_height;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool coded_heightSpecified {
-            get {
-                return this.coded_heightFieldSpecified;
-            }
-            set {
-                this.coded_heightFieldSpecified = value;
-            }
-        }
+        public bool coded_heightSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int has_b_frames {
-            get {
-                return this.has_b_framesField;
-            }
-            set {
-                this.has_b_framesField = value;
-            }
-        }
+        public int has_b_frames;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool has_b_framesSpecified {
-            get {
-                return this.has_b_framesFieldSpecified;
-            }
-            set {
-                this.has_b_framesFieldSpecified = value;
-            }
-        }
+        public bool has_b_framesSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string sample_aspect_ratio {
-            get {
-                return this.sample_aspect_ratioField;
-            }
-            set {
-                this.sample_aspect_ratioField = value;
-            }
-        }
+        public string sample_aspect_ratio;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string display_aspect_ratio {
-            get {
-                return this.display_aspect_ratioField;
-            }
-            set {
-                this.display_aspect_ratioField = value;
-            }
-        }
+        public string display_aspect_ratio;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string pix_fmt {
-            get {
-                return this.pix_fmtField;
-            }
-            set {
-                this.pix_fmtField = value;
-            }
-        }
+        public string pix_fmt;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int level {
-            get {
-                return this.levelField;
-            }
-            set {
-                this.levelField = value;
-            }
-        }
+        public int level;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool levelSpecified {
-            get {
-                return this.levelFieldSpecified;
-            }
-            set {
-                this.levelFieldSpecified = value;
-            }
-        }
+        public bool levelSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_range {
-            get {
-                return this.color_rangeField;
-            }
-            set {
-                this.color_rangeField = value;
-            }
-        }
+        public string color_range;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_space {
-            get {
-                return this.color_spaceField;
-            }
-            set {
-                this.color_spaceField = value;
-            }
-        }
+        public string color_space;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_transfer {
-            get {
-                return this.color_transferField;
-            }
-            set {
-                this.color_transferField = value;
-            }
-        }
+        public string color_transfer;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_primaries {
-            get {
-                return this.color_primariesField;
-            }
-            set {
-                this.color_primariesField = value;
-            }
-        }
+        public string color_primaries;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string chroma_location {
-            get {
-                return this.chroma_locationField;
-            }
-            set {
-                this.chroma_locationField = value;
-            }
-        }
+        public string chroma_location;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string field_order {
-            get {
-                return this.field_orderField;
-            }
-            set {
-                this.field_orderField = value;
-            }
-        }
+        public string field_order;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string timecode {
-            get {
-                return this.timecodeField;
-            }
-            set {
-                this.timecodeField = value;
-            }
-        }
+        public string timecode;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int refs {
-            get {
-                return this.refsField;
-            }
-            set {
-                this.refsField = value;
-            }
-        }
+        public int refs;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool refsSpecified {
-            get {
-                return this.refsFieldSpecified;
-            }
-            set {
-                this.refsFieldSpecified = value;
-            }
-        }
+        public bool refsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string sample_fmt {
-            get {
-                return this.sample_fmtField;
-            }
-            set {
-                this.sample_fmtField = value;
-            }
-        }
+        public string sample_fmt;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int sample_rate {
-            get {
-                return this.sample_rateField;
-            }
-            set {
-                this.sample_rateField = value;
-            }
-        }
+        public int sample_rate;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool sample_rateSpecified {
-            get {
-                return this.sample_rateFieldSpecified;
-            }
-            set {
-                this.sample_rateFieldSpecified = value;
-            }
-        }
+        public bool sample_rateSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int channels {
-            get {
-                return this.channelsField;
-            }
-            set {
-                this.channelsField = value;
-            }
-        }
+        public int channels;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool channelsSpecified {
-            get {
-                return this.channelsFieldSpecified;
-            }
-            set {
-                this.channelsFieldSpecified = value;
-            }
-        }
+        public bool channelsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string channel_layout {
-            get {
-                return this.channel_layoutField;
-            }
-            set {
-                this.channel_layoutField = value;
-            }
-        }
+        public string channel_layout;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int bits_per_sample {
-            get {
-                return this.bits_per_sampleField;
-            }
-            set {
-                this.bits_per_sampleField = value;
-            }
-        }
+        public int bits_per_sample;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool bits_per_sampleSpecified {
-            get {
-                return this.bits_per_sampleFieldSpecified;
-            }
-            set {
-                this.bits_per_sampleFieldSpecified = value;
-            }
-        }
+        public bool bits_per_sampleSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string id {
-            get {
-                return this.idField;
-            }
-            set {
-                this.idField = value;
-            }
-        }
+        public string id;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string r_frame_rate {
-            get {
-                return this.r_frame_rateField;
-            }
-            set {
-                this.r_frame_rateField = value;
-            }
-        }
+        public string r_frame_rate;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string avg_frame_rate {
-            get {
-                return this.avg_frame_rateField;
-            }
-            set {
-                this.avg_frame_rateField = value;
-            }
-        }
+        public string avg_frame_rate;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string time_base {
-            get {
-                return this.time_baseField;
-            }
-            set {
-                this.time_baseField = value;
-            }
-        }
+        public string time_base;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long start_pts {
-            get {
-                return this.start_ptsField;
-            }
-            set {
-                this.start_ptsField = value;
-            }
-        }
+        public long start_pts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_ptsSpecified {
-            get {
-                return this.start_ptsFieldSpecified;
-            }
-            set {
-                this.start_ptsFieldSpecified = value;
-            }
-        }
+        public bool start_ptsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float start_time {
-            get {
-                return this.start_timeField;
-            }
-            set {
-                this.start_timeField = value;
-            }
-        }
+        public float start_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_timeSpecified {
-            get {
-                return this.start_timeFieldSpecified;
-            }
-            set {
-                this.start_timeFieldSpecified = value;
-            }
-        }
+        public bool start_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long duration_ts {
-            get {
-                return this.duration_tsField;
-            }
-            set {
-                this.duration_tsField = value;
-            }
-        }
+        public long duration_ts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool duration_tsSpecified {
-            get {
-                return this.duration_tsFieldSpecified;
-            }
-            set {
-                this.duration_tsFieldSpecified = value;
-            }
-        }
+        public bool duration_tsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float duration {
-            get {
-                return this.durationField;
-            }
-            set {
-                this.durationField = value;
-            }
-        }
+        public float duration;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool durationSpecified {
-            get {
-                return this.durationFieldSpecified;
-            }
-            set {
-                this.durationFieldSpecified = value;
-            }
-        }
+        public bool durationSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int bit_rate {
-            get {
-                return this.bit_rateField;
-            }
-            set {
-                this.bit_rateField = value;
-            }
-        }
+        public int bit_rate;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool bit_rateSpecified {
-            get {
-                return this.bit_rateFieldSpecified;
-            }
-            set {
-                this.bit_rateFieldSpecified = value;
-            }
-        }
+        public bool bit_rateSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int max_bit_rate {
-            get {
-                return this.max_bit_rateField;
-            }
-            set {
-                this.max_bit_rateField = value;
-            }
-        }
+        public int max_bit_rate;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool max_bit_rateSpecified {
-            get {
-                return this.max_bit_rateFieldSpecified;
-            }
-            set {
-                this.max_bit_rateFieldSpecified = value;
-            }
-        }
+        public bool max_bit_rateSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int bits_per_raw_sample {
-            get {
-                return this.bits_per_raw_sampleField;
-            }
-            set {
-                this.bits_per_raw_sampleField = value;
-            }
-        }
+        public int bits_per_raw_sample;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool bits_per_raw_sampleSpecified {
-            get {
-                return this.bits_per_raw_sampleFieldSpecified;
-            }
-            set {
-                this.bits_per_raw_sampleFieldSpecified = value;
-            }
-        }
+        public bool bits_per_raw_sampleSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_frames {
-            get {
-                return this.nb_framesField;
-            }
-            set {
-                this.nb_framesField = value;
-            }
-        }
+        public int nb_frames;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool nb_framesSpecified {
-            get {
-                return this.nb_framesFieldSpecified;
-            }
-            set {
-                this.nb_framesFieldSpecified = value;
-            }
-        }
+        public bool nb_framesSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_read_frames {
-            get {
-                return this.nb_read_framesField;
-            }
-            set {
-                this.nb_read_framesField = value;
-            }
-        }
+        public int nb_read_frames;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool nb_read_framesSpecified {
-            get {
-                return this.nb_read_framesFieldSpecified;
-            }
-            set {
-                this.nb_read_framesFieldSpecified = value;
-            }
-        }
+        public bool nb_read_framesSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_read_packets {
-            get {
-                return this.nb_read_packetsField;
-            }
-            set {
-                this.nb_read_packetsField = value;
-            }
-        }
+        public int nb_read_packets;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool nb_read_packetsSpecified {
-            get {
-                return this.nb_read_packetsFieldSpecified;
-            }
-            set {
-                this.nb_read_packetsFieldSpecified = value;
-            }
-        }
+        public bool nb_read_packetsSpecified;
     }
     
     /// <remarks/>
@@ -1741,44 +607,17 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class packetSideDataType {
         
-        private string side_data_typeField;
-        
-        private int side_data_sizeField;
-        
-        private bool side_data_sizeFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string side_data_type;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string side_data_type {
-            get {
-                return this.side_data_typeField;
-            }
-            set {
-                this.side_data_typeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int side_data_size {
-            get {
-                return this.side_data_sizeField;
-            }
-            set {
-                this.side_data_sizeField = value;
-            }
-        }
+        public int side_data_size;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool side_data_sizeSpecified {
-            get {
-                return this.side_data_sizeFieldSpecified;
-            }
-            set {
-                this.side_data_sizeFieldSpecified = value;
-            }
-        }
+        public bool side_data_sizeSpecified;
     }
     
     /// <remarks/>
@@ -1789,201 +628,66 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class programType {
         
-        private tagType[] tagField;
-        
-        private streamType[] streamsField;
-        
-        private int program_idField;
-        
-        private int program_numField;
-        
-        private int nb_streamsField;
-        
-        private float start_timeField;
-        
-        private bool start_timeFieldSpecified;
-        
-        private long start_ptsField;
-        
-        private bool start_ptsFieldSpecified;
-        
-        private float end_timeField;
-        
-        private bool end_timeFieldSpecified;
-        
-        private long end_ptsField;
-        
-        private bool end_ptsFieldSpecified;
-        
-        private int pmt_pidField;
-        
-        private int pcr_pidField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("tag", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public tagType[] tag {
-            get {
-                return this.tagField;
-            }
-            set {
-                this.tagField = value;
-            }
-        }
+        public tagType[] tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("stream", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public streamType[] streams {
-            get {
-                return this.streamsField;
-            }
-            set {
-                this.streamsField = value;
-            }
-        }
+        public streamType[] streams;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int program_id {
-            get {
-                return this.program_idField;
-            }
-            set {
-                this.program_idField = value;
-            }
-        }
+        public int program_id;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int program_num {
-            get {
-                return this.program_numField;
-            }
-            set {
-                this.program_numField = value;
-            }
-        }
+        public int program_num;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_streams {
-            get {
-                return this.nb_streamsField;
-            }
-            set {
-                this.nb_streamsField = value;
-            }
-        }
+        public int nb_streams;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float start_time {
-            get {
-                return this.start_timeField;
-            }
-            set {
-                this.start_timeField = value;
-            }
-        }
+        public float start_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_timeSpecified {
-            get {
-                return this.start_timeFieldSpecified;
-            }
-            set {
-                this.start_timeFieldSpecified = value;
-            }
-        }
+        public bool start_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long start_pts {
-            get {
-                return this.start_ptsField;
-            }
-            set {
-                this.start_ptsField = value;
-            }
-        }
+        public long start_pts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_ptsSpecified {
-            get {
-                return this.start_ptsFieldSpecified;
-            }
-            set {
-                this.start_ptsFieldSpecified = value;
-            }
-        }
+        public bool start_ptsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float end_time {
-            get {
-                return this.end_timeField;
-            }
-            set {
-                this.end_timeField = value;
-            }
-        }
+        public float end_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool end_timeSpecified {
-            get {
-                return this.end_timeFieldSpecified;
-            }
-            set {
-                this.end_timeFieldSpecified = value;
-            }
-        }
+        public bool end_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long end_pts {
-            get {
-                return this.end_ptsField;
-            }
-            set {
-                this.end_ptsField = value;
-            }
-        }
+        public long end_pts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool end_ptsSpecified {
-            get {
-                return this.end_ptsFieldSpecified;
-            }
-            set {
-                this.end_ptsFieldSpecified = value;
-            }
-        }
+        public bool end_ptsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int pmt_pid {
-            get {
-                return this.pmt_pidField;
-            }
-            set {
-                this.pmt_pidField = value;
-            }
-        }
+        public int pmt_pid;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int pcr_pid {
-            get {
-                return this.pcr_pidField;
-            }
-            set {
-                this.pcr_pidField = value;
-            }
-        }
+        public int pcr_pid;
     }
     
     /// <remarks/>
@@ -1994,20 +698,11 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class packetsAndFramesType {
         
-        private object[] itemsField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("frame", typeof(frameType), Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlElementAttribute("packet", typeof(packetType), Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlElementAttribute("subtitle", typeof(subtitleType), Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public object[] Items {
-            get {
-                return this.itemsField;
-            }
-            set {
-                this.itemsField = value;
-            }
-        }
+        public object[] Items;
     }
     
     /// <remarks/>
@@ -2018,774 +713,243 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class frameType {
         
-        private tagType[] tagField;
-        
-        private logType[] logsField;
-        
-        private frameSideDataType[] side_data_listField;
-        
-        private string media_typeField;
-        
-        private int stream_indexField;
-        
-        private bool stream_indexFieldSpecified;
-        
-        private int key_frameField;
-        
-        private long ptsField;
-        
-        private bool ptsFieldSpecified;
-        
-        private float pts_timeField;
-        
-        private bool pts_timeFieldSpecified;
-        
-        private long pkt_ptsField;
-        
-        private bool pkt_ptsFieldSpecified;
-        
-        private float pkt_pts_timeField;
-        
-        private bool pkt_pts_timeFieldSpecified;
-        
-        private long pkt_dtsField;
-        
-        private bool pkt_dtsFieldSpecified;
-        
-        private float pkt_dts_timeField;
-        
-        private bool pkt_dts_timeFieldSpecified;
-        
-        private long best_effort_timestampField;
-        
-        private bool best_effort_timestampFieldSpecified;
-        
-        private float best_effort_timestamp_timeField;
-        
-        private bool best_effort_timestamp_timeFieldSpecified;
-        
-        private long pkt_durationField;
-        
-        private bool pkt_durationFieldSpecified;
-        
-        private float pkt_duration_timeField;
-        
-        private bool pkt_duration_timeFieldSpecified;
-        
-        private long pkt_posField;
-        
-        private bool pkt_posFieldSpecified;
-        
-        private int pkt_sizeField;
-        
-        private bool pkt_sizeFieldSpecified;
-        
-        private string sample_fmtField;
-        
-        private long nb_samplesField;
-        
-        private bool nb_samplesFieldSpecified;
-        
-        private int channelsField;
-        
-        private bool channelsFieldSpecified;
-        
-        private string channel_layoutField;
-        
-        private long widthField;
-        
-        private bool widthFieldSpecified;
-        
-        private long heightField;
-        
-        private bool heightFieldSpecified;
-        
-        private string pix_fmtField;
-        
-        private string sample_aspect_ratioField;
-        
-        private string pict_typeField;
-        
-        private long coded_picture_numberField;
-        
-        private bool coded_picture_numberFieldSpecified;
-        
-        private long display_picture_numberField;
-        
-        private bool display_picture_numberFieldSpecified;
-        
-        private int interlaced_frameField;
-        
-        private bool interlaced_frameFieldSpecified;
-        
-        private int top_field_firstField;
-        
-        private bool top_field_firstFieldSpecified;
-        
-        private int repeat_pictField;
-        
-        private bool repeat_pictFieldSpecified;
-        
-        private string color_rangeField;
-        
-        private string color_spaceField;
-        
-        private string color_primariesField;
-        
-        private string color_transferField;
-        
-        private string chroma_locationField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("tag", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public tagType[] tag {
-            get {
-                return this.tagField;
-            }
-            set {
-                this.tagField = value;
-            }
-        }
+        public tagType[] tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("log", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public logType[] logs {
-            get {
-                return this.logsField;
-            }
-            set {
-                this.logsField = value;
-            }
-        }
+        public logType[] logs;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("side_data", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public frameSideDataType[] side_data_list {
-            get {
-                return this.side_data_listField;
-            }
-            set {
-                this.side_data_listField = value;
-            }
-        }
+        public frameSideDataType[] side_data_list;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string media_type {
-            get {
-                return this.media_typeField;
-            }
-            set {
-                this.media_typeField = value;
-            }
-        }
+        public string media_type;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int stream_index {
-            get {
-                return this.stream_indexField;
-            }
-            set {
-                this.stream_indexField = value;
-            }
-        }
+        public int stream_index;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool stream_indexSpecified {
-            get {
-                return this.stream_indexFieldSpecified;
-            }
-            set {
-                this.stream_indexFieldSpecified = value;
-            }
-        }
+        public bool stream_indexSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int key_frame {
-            get {
-                return this.key_frameField;
-            }
-            set {
-                this.key_frameField = value;
-            }
-        }
+        public int key_frame;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pts {
-            get {
-                return this.ptsField;
-            }
-            set {
-                this.ptsField = value;
-            }
-        }
+        public long pts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ptsSpecified {
-            get {
-                return this.ptsFieldSpecified;
-            }
-            set {
-                this.ptsFieldSpecified = value;
-            }
-        }
+        public bool ptsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float pts_time {
-            get {
-                return this.pts_timeField;
-            }
-            set {
-                this.pts_timeField = value;
-            }
-        }
+        public float pts_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pts_timeSpecified {
-            get {
-                return this.pts_timeFieldSpecified;
-            }
-            set {
-                this.pts_timeFieldSpecified = value;
-            }
-        }
+        public bool pts_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pkt_pts {
-            get {
-                return this.pkt_ptsField;
-            }
-            set {
-                this.pkt_ptsField = value;
-            }
-        }
+        public long pkt_pts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_ptsSpecified {
-            get {
-                return this.pkt_ptsFieldSpecified;
-            }
-            set {
-                this.pkt_ptsFieldSpecified = value;
-            }
-        }
+        public bool pkt_ptsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float pkt_pts_time {
-            get {
-                return this.pkt_pts_timeField;
-            }
-            set {
-                this.pkt_pts_timeField = value;
-            }
-        }
+        public float pkt_pts_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_pts_timeSpecified {
-            get {
-                return this.pkt_pts_timeFieldSpecified;
-            }
-            set {
-                this.pkt_pts_timeFieldSpecified = value;
-            }
-        }
+        public bool pkt_pts_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pkt_dts {
-            get {
-                return this.pkt_dtsField;
-            }
-            set {
-                this.pkt_dtsField = value;
-            }
-        }
+        public long pkt_dts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_dtsSpecified {
-            get {
-                return this.pkt_dtsFieldSpecified;
-            }
-            set {
-                this.pkt_dtsFieldSpecified = value;
-            }
-        }
+        public bool pkt_dtsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float pkt_dts_time {
-            get {
-                return this.pkt_dts_timeField;
-            }
-            set {
-                this.pkt_dts_timeField = value;
-            }
-        }
+        public float pkt_dts_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_dts_timeSpecified {
-            get {
-                return this.pkt_dts_timeFieldSpecified;
-            }
-            set {
-                this.pkt_dts_timeFieldSpecified = value;
-            }
-        }
+        public bool pkt_dts_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long best_effort_timestamp {
-            get {
-                return this.best_effort_timestampField;
-            }
-            set {
-                this.best_effort_timestampField = value;
-            }
-        }
+        public long best_effort_timestamp;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool best_effort_timestampSpecified {
-            get {
-                return this.best_effort_timestampFieldSpecified;
-            }
-            set {
-                this.best_effort_timestampFieldSpecified = value;
-            }
-        }
+        public bool best_effort_timestampSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float best_effort_timestamp_time {
-            get {
-                return this.best_effort_timestamp_timeField;
-            }
-            set {
-                this.best_effort_timestamp_timeField = value;
-            }
-        }
+        public float best_effort_timestamp_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool best_effort_timestamp_timeSpecified {
-            get {
-                return this.best_effort_timestamp_timeFieldSpecified;
-            }
-            set {
-                this.best_effort_timestamp_timeFieldSpecified = value;
-            }
-        }
+        public bool best_effort_timestamp_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pkt_duration {
-            get {
-                return this.pkt_durationField;
-            }
-            set {
-                this.pkt_durationField = value;
-            }
-        }
+        public long pkt_duration;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_durationSpecified {
-            get {
-                return this.pkt_durationFieldSpecified;
-            }
-            set {
-                this.pkt_durationFieldSpecified = value;
-            }
-        }
+        public bool pkt_durationSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float pkt_duration_time {
-            get {
-                return this.pkt_duration_timeField;
-            }
-            set {
-                this.pkt_duration_timeField = value;
-            }
-        }
+        public float pkt_duration_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_duration_timeSpecified {
-            get {
-                return this.pkt_duration_timeFieldSpecified;
-            }
-            set {
-                this.pkt_duration_timeFieldSpecified = value;
-            }
-        }
+        public bool pkt_duration_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pkt_pos {
-            get {
-                return this.pkt_posField;
-            }
-            set {
-                this.pkt_posField = value;
-            }
-        }
+        public long pkt_pos;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_posSpecified {
-            get {
-                return this.pkt_posFieldSpecified;
-            }
-            set {
-                this.pkt_posFieldSpecified = value;
-            }
-        }
+        public bool pkt_posSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int pkt_size {
-            get {
-                return this.pkt_sizeField;
-            }
-            set {
-                this.pkt_sizeField = value;
-            }
-        }
+        public int pkt_size;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pkt_sizeSpecified {
-            get {
-                return this.pkt_sizeFieldSpecified;
-            }
-            set {
-                this.pkt_sizeFieldSpecified = value;
-            }
-        }
+        public bool pkt_sizeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string sample_fmt {
-            get {
-                return this.sample_fmtField;
-            }
-            set {
-                this.sample_fmtField = value;
-            }
-        }
+        public string sample_fmt;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long nb_samples {
-            get {
-                return this.nb_samplesField;
-            }
-            set {
-                this.nb_samplesField = value;
-            }
-        }
+        public long nb_samples;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool nb_samplesSpecified {
-            get {
-                return this.nb_samplesFieldSpecified;
-            }
-            set {
-                this.nb_samplesFieldSpecified = value;
-            }
-        }
+        public bool nb_samplesSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int channels {
-            get {
-                return this.channelsField;
-            }
-            set {
-                this.channelsField = value;
-            }
-        }
+        public int channels;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool channelsSpecified {
-            get {
-                return this.channelsFieldSpecified;
-            }
-            set {
-                this.channelsFieldSpecified = value;
-            }
-        }
+        public bool channelsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string channel_layout {
-            get {
-                return this.channel_layoutField;
-            }
-            set {
-                this.channel_layoutField = value;
-            }
-        }
+        public string channel_layout;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long width {
-            get {
-                return this.widthField;
-            }
-            set {
-                this.widthField = value;
-            }
-        }
+        public long width;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool widthSpecified {
-            get {
-                return this.widthFieldSpecified;
-            }
-            set {
-                this.widthFieldSpecified = value;
-            }
-        }
+        public bool widthSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long height {
-            get {
-                return this.heightField;
-            }
-            set {
-                this.heightField = value;
-            }
-        }
+        public long height;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool heightSpecified {
-            get {
-                return this.heightFieldSpecified;
-            }
-            set {
-                this.heightFieldSpecified = value;
-            }
-        }
+        public bool heightSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string pix_fmt {
-            get {
-                return this.pix_fmtField;
-            }
-            set {
-                this.pix_fmtField = value;
-            }
-        }
+        public string pix_fmt;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string sample_aspect_ratio {
-            get {
-                return this.sample_aspect_ratioField;
-            }
-            set {
-                this.sample_aspect_ratioField = value;
-            }
-        }
+        public string sample_aspect_ratio;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string pict_type {
-            get {
-                return this.pict_typeField;
-            }
-            set {
-                this.pict_typeField = value;
-            }
-        }
+        public string pict_type;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long coded_picture_number {
-            get {
-                return this.coded_picture_numberField;
-            }
-            set {
-                this.coded_picture_numberField = value;
-            }
-        }
+        public long coded_picture_number;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool coded_picture_numberSpecified {
-            get {
-                return this.coded_picture_numberFieldSpecified;
-            }
-            set {
-                this.coded_picture_numberFieldSpecified = value;
-            }
-        }
+        public bool coded_picture_numberSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long display_picture_number {
-            get {
-                return this.display_picture_numberField;
-            }
-            set {
-                this.display_picture_numberField = value;
-            }
-        }
+        public long display_picture_number;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool display_picture_numberSpecified {
-            get {
-                return this.display_picture_numberFieldSpecified;
-            }
-            set {
-                this.display_picture_numberFieldSpecified = value;
-            }
-        }
+        public bool display_picture_numberSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int interlaced_frame {
-            get {
-                return this.interlaced_frameField;
-            }
-            set {
-                this.interlaced_frameField = value;
-            }
-        }
+        public int interlaced_frame;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool interlaced_frameSpecified {
-            get {
-                return this.interlaced_frameFieldSpecified;
-            }
-            set {
-                this.interlaced_frameFieldSpecified = value;
-            }
-        }
+        public bool interlaced_frameSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int top_field_first {
-            get {
-                return this.top_field_firstField;
-            }
-            set {
-                this.top_field_firstField = value;
-            }
-        }
+        public int top_field_first;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool top_field_firstSpecified {
-            get {
-                return this.top_field_firstFieldSpecified;
-            }
-            set {
-                this.top_field_firstFieldSpecified = value;
-            }
-        }
+        public bool top_field_firstSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int repeat_pict {
-            get {
-                return this.repeat_pictField;
-            }
-            set {
-                this.repeat_pictField = value;
-            }
-        }
+        public int repeat_pict;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool repeat_pictSpecified {
-            get {
-                return this.repeat_pictFieldSpecified;
-            }
-            set {
-                this.repeat_pictFieldSpecified = value;
-            }
-        }
+        public bool repeat_pictSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_range {
-            get {
-                return this.color_rangeField;
-            }
-            set {
-                this.color_rangeField = value;
-            }
-        }
+        public string color_range;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_space {
-            get {
-                return this.color_spaceField;
-            }
-            set {
-                this.color_spaceField = value;
-            }
-        }
+        public string color_space;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_primaries {
-            get {
-                return this.color_primariesField;
-            }
-            set {
-                this.color_primariesField = value;
-            }
-        }
+        public string color_primaries;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string color_transfer {
-            get {
-                return this.color_transferField;
-            }
-            set {
-                this.color_transferField = value;
-            }
-        }
+        public string color_transfer;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string chroma_location {
-            get {
-                return this.chroma_locationField;
-            }
-            set {
-                this.chroma_locationField = value;
-            }
-        }
+        public string chroma_location;
     }
     
     /// <remarks/>
@@ -2796,122 +960,41 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class logType {
         
-        private string contextField;
-        
-        private int levelField;
-        
-        private bool levelFieldSpecified;
-        
-        private int categoryField;
-        
-        private bool categoryFieldSpecified;
-        
-        private string parent_contextField;
-        
-        private int parent_categoryField;
-        
-        private bool parent_categoryFieldSpecified;
-        
-        private string messageField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string context;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string context {
-            get {
-                return this.contextField;
-            }
-            set {
-                this.contextField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int level {
-            get {
-                return this.levelField;
-            }
-            set {
-                this.levelField = value;
-            }
-        }
+        public int level;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool levelSpecified {
-            get {
-                return this.levelFieldSpecified;
-            }
-            set {
-                this.levelFieldSpecified = value;
-            }
-        }
+        public bool levelSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int category {
-            get {
-                return this.categoryField;
-            }
-            set {
-                this.categoryField = value;
-            }
-        }
+        public int category;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool categorySpecified {
-            get {
-                return this.categoryFieldSpecified;
-            }
-            set {
-                this.categoryFieldSpecified = value;
-            }
-        }
+        public bool categorySpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string parent_context {
-            get {
-                return this.parent_contextField;
-            }
-            set {
-                this.parent_contextField = value;
-            }
-        }
+        public string parent_context;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int parent_category {
-            get {
-                return this.parent_categoryField;
-            }
-            set {
-                this.parent_categoryField = value;
-            }
-        }
+        public int parent_category;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool parent_categorySpecified {
-            get {
-                return this.parent_categoryFieldSpecified;
-            }
-            set {
-                this.parent_categoryFieldSpecified = value;
-            }
-        }
+        public bool parent_categorySpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string message {
-            get {
-                return this.messageField;
-            }
-            set {
-                this.messageField = value;
-            }
-        }
+        public string message;
     }
     
     /// <remarks/>
@@ -2922,57 +1005,21 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class frameSideDataType {
         
-        private string side_data_typeField;
-        
-        private int side_data_sizeField;
-        
-        private bool side_data_sizeFieldSpecified;
-        
-        private string timecodeField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string side_data_type;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string side_data_type {
-            get {
-                return this.side_data_typeField;
-            }
-            set {
-                this.side_data_typeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int side_data_size {
-            get {
-                return this.side_data_sizeField;
-            }
-            set {
-                this.side_data_sizeField = value;
-            }
-        }
+        public int side_data_size;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool side_data_sizeSpecified {
-            get {
-                return this.side_data_sizeFieldSpecified;
-            }
-            set {
-                this.side_data_sizeFieldSpecified = value;
-            }
-        }
+        public bool side_data_sizeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string timecode {
-            get {
-                return this.timecodeField;
-            }
-            set {
-                this.timecodeField = value;
-            }
-        }
+        public string timecode;
     }
     
     /// <remarks/>
@@ -2983,344 +1030,110 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class packetType {
         
-        private tagType[] tagField;
-        
-        private packetSideDataType[] side_data_listField;
-        
-        private string codec_typeField;
-        
-        private int stream_indexField;
-        
-        private long ptsField;
-        
-        private bool ptsFieldSpecified;
-        
-        private float pts_timeField;
-        
-        private bool pts_timeFieldSpecified;
-        
-        private long dtsField;
-        
-        private bool dtsFieldSpecified;
-        
-        private float dts_timeField;
-        
-        private bool dts_timeFieldSpecified;
-        
-        private long durationField;
-        
-        private bool durationFieldSpecified;
-        
-        private float duration_timeField;
-        
-        private bool duration_timeFieldSpecified;
-        
-        private long convergence_durationField;
-        
-        private bool convergence_durationFieldSpecified;
-        
-        private float convergence_duration_timeField;
-        
-        private bool convergence_duration_timeFieldSpecified;
-        
-        private long sizeField;
-        
-        private long posField;
-        
-        private bool posFieldSpecified;
-        
-        private string flagsField;
-        
-        private string dataField;
-        
-        private string data_hashField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("tag", Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public tagType[] tag {
-            get {
-                return this.tagField;
-            }
-            set {
-                this.tagField = value;
-            }
-        }
+        public tagType[] tag;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("side_data", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public packetSideDataType[] side_data_list {
-            get {
-                return this.side_data_listField;
-            }
-            set {
-                this.side_data_listField = value;
-            }
-        }
+        public packetSideDataType[] side_data_list;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string codec_type {
-            get {
-                return this.codec_typeField;
-            }
-            set {
-                this.codec_typeField = value;
-            }
-        }
+        public string codec_type;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int stream_index {
-            get {
-                return this.stream_indexField;
-            }
-            set {
-                this.stream_indexField = value;
-            }
-        }
+        public int stream_index;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pts {
-            get {
-                return this.ptsField;
-            }
-            set {
-                this.ptsField = value;
-            }
-        }
+        public long pts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ptsSpecified {
-            get {
-                return this.ptsFieldSpecified;
-            }
-            set {
-                this.ptsFieldSpecified = value;
-            }
-        }
+        public bool ptsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float pts_time {
-            get {
-                return this.pts_timeField;
-            }
-            set {
-                this.pts_timeField = value;
-            }
-        }
+        public float pts_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pts_timeSpecified {
-            get {
-                return this.pts_timeFieldSpecified;
-            }
-            set {
-                this.pts_timeFieldSpecified = value;
-            }
-        }
+        public bool pts_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long dts {
-            get {
-                return this.dtsField;
-            }
-            set {
-                this.dtsField = value;
-            }
-        }
+        public long dts;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool dtsSpecified {
-            get {
-                return this.dtsFieldSpecified;
-            }
-            set {
-                this.dtsFieldSpecified = value;
-            }
-        }
+        public bool dtsSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float dts_time {
-            get {
-                return this.dts_timeField;
-            }
-            set {
-                this.dts_timeField = value;
-            }
-        }
+        public float dts_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool dts_timeSpecified {
-            get {
-                return this.dts_timeFieldSpecified;
-            }
-            set {
-                this.dts_timeFieldSpecified = value;
-            }
-        }
+        public bool dts_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long duration {
-            get {
-                return this.durationField;
-            }
-            set {
-                this.durationField = value;
-            }
-        }
+        public long duration;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool durationSpecified {
-            get {
-                return this.durationFieldSpecified;
-            }
-            set {
-                this.durationFieldSpecified = value;
-            }
-        }
+        public bool durationSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float duration_time {
-            get {
-                return this.duration_timeField;
-            }
-            set {
-                this.duration_timeField = value;
-            }
-        }
+        public float duration_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool duration_timeSpecified {
-            get {
-                return this.duration_timeFieldSpecified;
-            }
-            set {
-                this.duration_timeFieldSpecified = value;
-            }
-        }
+        public bool duration_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long convergence_duration {
-            get {
-                return this.convergence_durationField;
-            }
-            set {
-                this.convergence_durationField = value;
-            }
-        }
+        public long convergence_duration;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool convergence_durationSpecified {
-            get {
-                return this.convergence_durationFieldSpecified;
-            }
-            set {
-                this.convergence_durationFieldSpecified = value;
-            }
-        }
+        public bool convergence_durationSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float convergence_duration_time {
-            get {
-                return this.convergence_duration_timeField;
-            }
-            set {
-                this.convergence_duration_timeField = value;
-            }
-        }
+        public float convergence_duration_time;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool convergence_duration_timeSpecified {
-            get {
-                return this.convergence_duration_timeFieldSpecified;
-            }
-            set {
-                this.convergence_duration_timeFieldSpecified = value;
-            }
-        }
+        public bool convergence_duration_timeSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long size {
-            get {
-                return this.sizeField;
-            }
-            set {
-                this.sizeField = value;
-            }
-        }
+        public long size;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pos {
-            get {
-                return this.posField;
-            }
-            set {
-                this.posField = value;
-            }
-        }
+        public long pos;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool posSpecified {
-            get {
-                return this.posFieldSpecified;
-            }
-            set {
-                this.posFieldSpecified = value;
-            }
-        }
+        public bool posSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string flags {
-            get {
-                return this.flagsField;
-            }
-            set {
-                this.flagsField = value;
-            }
-        }
+        public string flags;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string data {
-            get {
-                return this.dataField;
-            }
-            set {
-                this.dataField = value;
-            }
-        }
+        public string data;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string data_hash {
-            get {
-                return this.data_hashField;
-            }
-            set {
-                this.data_hashField = value;
-            }
-        }
+        public string data_hash;
     }
     
     /// <remarks/>
@@ -3331,177 +1144,60 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class subtitleType {
         
-        private string media_typeField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string media_type;
         
-        private long ptsField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public long pts;
         
-        private bool ptsFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool ptsSpecified;
         
-        private float pts_timeField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public float pts_time;
         
-        private bool pts_timeFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool pts_timeSpecified;
         
-        private int formatField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int format;
         
-        private bool formatFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool formatSpecified;
         
-        private int start_display_timeField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int start_display_time;
         
-        private bool start_display_timeFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool start_display_timeSpecified;
         
-        private int end_display_timeField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int end_display_time;
         
-        private bool end_display_timeFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool end_display_timeSpecified;
         
-        private int num_rectsField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int num_rects;
         
-        private bool num_rectsFieldSpecified;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        public bool num_rectsSpecified;
         
         public subtitleType() {
-            this.media_typeField = "subtitle";
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string media_type {
-            get {
-                return this.media_typeField;
-            }
-            set {
-                this.media_typeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public long pts {
-            get {
-                return this.ptsField;
-            }
-            set {
-                this.ptsField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool ptsSpecified {
-            get {
-                return this.ptsFieldSpecified;
-            }
-            set {
-                this.ptsFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public float pts_time {
-            get {
-                return this.pts_timeField;
-            }
-            set {
-                this.pts_timeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool pts_timeSpecified {
-            get {
-                return this.pts_timeFieldSpecified;
-            }
-            set {
-                this.pts_timeFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int format {
-            get {
-                return this.formatField;
-            }
-            set {
-                this.formatField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool formatSpecified {
-            get {
-                return this.formatFieldSpecified;
-            }
-            set {
-                this.formatFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int start_display_time {
-            get {
-                return this.start_display_timeField;
-            }
-            set {
-                this.start_display_timeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool start_display_timeSpecified {
-            get {
-                return this.start_display_timeFieldSpecified;
-            }
-            set {
-                this.start_display_timeFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int end_display_time {
-            get {
-                return this.end_display_timeField;
-            }
-            set {
-                this.end_display_timeField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool end_display_timeSpecified {
-            get {
-                return this.end_display_timeFieldSpecified;
-            }
-            set {
-                this.end_display_timeFieldSpecified = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int num_rects {
-            get {
-                return this.num_rectsField;
-            }
-            set {
-                this.num_rectsField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool num_rectsSpecified {
-            get {
-                return this.num_rectsFieldSpecified;
-            }
-            set {
-                this.num_rectsFieldSpecified = value;
-            }
+            this.media_type = "subtitle";
         }
     }
     
@@ -3513,19 +1209,10 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class framesType {
         
-        private object[] itemsField;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute("frame", typeof(frameType), Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlElementAttribute("subtitle", typeof(subtitleType), Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public object[] Items {
-            get {
-                return this.itemsField;
-            }
-            set {
-                this.itemsField = value;
-            }
-        }
+        public object[] Items;
     }
     
     /// <remarks/>
@@ -3536,31 +1223,13 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class pixelFormatComponentType {
         
-        private int indexField;
-        
-        private int bit_depthField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int index;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int index {
-            get {
-                return this.indexField;
-            }
-            set {
-                this.indexField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int bit_depth {
-            get {
-                return this.bit_depthField;
-            }
-            set {
-                this.bit_depthField = value;
-            }
-        }
+        public int bit_depth;
     }
     
     /// <remarks/>
@@ -3571,109 +1240,37 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class pixelFormatFlagsType {
         
-        private int big_endianField;
-        
-        private int paletteField;
-        
-        private int bitstreamField;
-        
-        private int hwaccelField;
-        
-        private int planarField;
-        
-        private int rgbField;
-        
-        private int pseudopalField;
-        
-        private int alphaField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public int big_endian;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int big_endian {
-            get {
-                return this.big_endianField;
-            }
-            set {
-                this.big_endianField = value;
-            }
-        }
+        public int palette;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int palette {
-            get {
-                return this.paletteField;
-            }
-            set {
-                this.paletteField = value;
-            }
-        }
+        public int bitstream;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int bitstream {
-            get {
-                return this.bitstreamField;
-            }
-            set {
-                this.bitstreamField = value;
-            }
-        }
+        public int hwaccel;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int hwaccel {
-            get {
-                return this.hwaccelField;
-            }
-            set {
-                this.hwaccelField = value;
-            }
-        }
+        public int planar;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int planar {
-            get {
-                return this.planarField;
-            }
-            set {
-                this.planarField = value;
-            }
-        }
+        public int rgb;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int rgb {
-            get {
-                return this.rgbField;
-            }
-            set {
-                this.rgbField = value;
-            }
-        }
+        public int pseudopal;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int pseudopal {
-            get {
-                return this.pseudopalField;
-            }
-            set {
-                this.pseudopalField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int alpha {
-            get {
-                return this.alphaField;
-            }
-            set {
-                this.alphaField = value;
-            }
-        }
+        public int alpha;
     }
     
     /// <remarks/>
@@ -3684,136 +1281,46 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class pixelFormatType {
         
-        private pixelFormatFlagsType flagsField;
-        
-        private pixelFormatComponentType[] componentsField;
-        
-        private string nameField;
-        
-        private int nb_componentsField;
-        
-        private int log2_chroma_wField;
-        
-        private bool log2_chroma_wFieldSpecified;
-        
-        private int log2_chroma_hField;
-        
-        private bool log2_chroma_hFieldSpecified;
-        
-        private int bits_per_pixelField;
-        
-        private bool bits_per_pixelFieldSpecified;
-        
         /// <remarks/>
         [System.Xml.Serialization.XmlElementAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
-        public pixelFormatFlagsType flags {
-            get {
-                return this.flagsField;
-            }
-            set {
-                this.flagsField = value;
-            }
-        }
+        public pixelFormatFlagsType flags;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlArrayAttribute(Form=System.Xml.Schema.XmlSchemaForm.Unqualified)]
         [System.Xml.Serialization.XmlArrayItemAttribute("component", Form=System.Xml.Schema.XmlSchemaForm.Unqualified, IsNullable=false)]
-        public pixelFormatComponentType[] components {
-            get {
-                return this.componentsField;
-            }
-            set {
-                this.componentsField = value;
-            }
-        }
+        public pixelFormatComponentType[] components;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string name {
-            get {
-                return this.nameField;
-            }
-            set {
-                this.nameField = value;
-            }
-        }
+        public string name;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int nb_components {
-            get {
-                return this.nb_componentsField;
-            }
-            set {
-                this.nb_componentsField = value;
-            }
-        }
+        public int nb_components;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int log2_chroma_w {
-            get {
-                return this.log2_chroma_wField;
-            }
-            set {
-                this.log2_chroma_wField = value;
-            }
-        }
+        public int log2_chroma_w;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool log2_chroma_wSpecified {
-            get {
-                return this.log2_chroma_wFieldSpecified;
-            }
-            set {
-                this.log2_chroma_wFieldSpecified = value;
-            }
-        }
+        public bool log2_chroma_wSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int log2_chroma_h {
-            get {
-                return this.log2_chroma_hField;
-            }
-            set {
-                this.log2_chroma_hField = value;
-            }
-        }
+        public int log2_chroma_h;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool log2_chroma_hSpecified {
-            get {
-                return this.log2_chroma_hFieldSpecified;
-            }
-            set {
-                this.log2_chroma_hFieldSpecified = value;
-            }
-        }
+        public bool log2_chroma_hSpecified;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int bits_per_pixel {
-            get {
-                return this.bits_per_pixelField;
-            }
-            set {
-                this.bits_per_pixelField = value;
-            }
-        }
+        public int bits_per_pixel;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        public bool bits_per_pixelSpecified {
-            get {
-                return this.bits_per_pixelFieldSpecified;
-            }
-            set {
-                this.bits_per_pixelFieldSpecified = value;
-            }
-        }
+        public bool bits_per_pixelSpecified;
     }
     
     /// <remarks/>
@@ -3824,82 +1331,28 @@ namespace Hypersonic.Ffmpeg {
     [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://www.ffmpeg.org/schema/ffprobe")]
     public partial class libraryVersionType {
         
-        private string nameField;
-        
-        private int majorField;
-        
-        private int minorField;
-        
-        private int microField;
-        
-        private int versionField;
-        
-        private string identField;
+        /// <remarks/>
+        [System.Xml.Serialization.XmlAttributeAttribute()]
+        public string name;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string name {
-            get {
-                return this.nameField;
-            }
-            set {
-                this.nameField = value;
-            }
-        }
+        public int major;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int major {
-            get {
-                return this.majorField;
-            }
-            set {
-                this.majorField = value;
-            }
-        }
+        public int minor;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int minor {
-            get {
-                return this.minorField;
-            }
-            set {
-                this.minorField = value;
-            }
-        }
+        public int micro;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int micro {
-            get {
-                return this.microField;
-            }
-            set {
-                this.microField = value;
-            }
-        }
+        public int version;
         
         /// <remarks/>
         [System.Xml.Serialization.XmlAttributeAttribute()]
-        public int version {
-            get {
-                return this.versionField;
-            }
-            set {
-                this.versionField = value;
-            }
-        }
-        
-        /// <remarks/>
-        [System.Xml.Serialization.XmlAttributeAttribute()]
-        public string ident {
-            get {
-                return this.identField;
-            }
-            set {
-                this.identField = value;
-            }
-        }
+        public string ident;
     }
 }

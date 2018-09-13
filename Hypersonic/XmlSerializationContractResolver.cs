@@ -46,18 +46,18 @@ namespace Hypersonic
 
             var jsonProperties = new List<JsonProperty>();
 
-            var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            foreach (var property in properties)
+            var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var field in fields)
             {
-                if (property.GetCustomAttribute<XmlIgnoreAttribute>() != null)
+                if (field.GetCustomAttribute<XmlIgnoreAttribute>() != null)
                     continue;
 
-                var choiceAttribute = property.GetCustomAttribute<XmlChoiceIdentifierAttribute>();
-                var attributeAttributes = property.GetCustomAttributes<XmlAttributeAttribute>().ToArray();
-                var elementAttributes = property.GetCustomAttributes<XmlElementAttribute>().ToArray();
-                var textAttribute = property.GetCustomAttribute<XmlTextAttribute>();
+                var choiceAttribute = field.GetCustomAttribute<XmlChoiceIdentifierAttribute>();
+                var attributeAttributes = field.GetCustomAttributes<XmlAttributeAttribute>().ToArray();
+                var elementAttributes = field.GetCustomAttributes<XmlElementAttribute>().ToArray();
+                var textAttribute = field.GetCustomAttribute<XmlTextAttribute>();
 
-                PropertyInfo choiceProperty = null;
+                FieldInfo choiceField = null;
 
                 if (choiceAttribute == null)
                 {
@@ -66,10 +66,8 @@ namespace Hypersonic
                 }
                 else
                 {
-                    choiceProperty = type.GetProperty(choiceAttribute.MemberName);
-                    if (choiceProperty == null)
-                        throw new InvalidOperationException();
-                    if (!choiceProperty.PropertyType.IsEnum)
+                    choiceField = type.GetField(choiceAttribute.MemberName, BindingFlags.Public | BindingFlags.Instance);
+                    if (choiceField == null)
                         throw new InvalidOperationException();
                 }
 
@@ -77,7 +75,7 @@ namespace Hypersonic
 
                 foreach (var attributeAttribute in attributeAttributes)
                 {
-                    var jsonProperty = CreateXmlProperty(property, memberSerialization, attributeAttribute.AttributeName, attributeAttribute.Type, choiceProperty);
+                    var jsonProperty = CreateXmlProperty(field, memberSerialization, attributeAttribute.AttributeName, attributeAttribute.Type, choiceField);
 
                     if (names.Contains(jsonProperty.PropertyName))
                         throw new InvalidOperationException();
@@ -88,7 +86,7 @@ namespace Hypersonic
 
                 foreach (var elementAttribute in elementAttributes)
                 {
-                    var jsonProperty = CreateXmlProperty(property, memberSerialization, elementAttribute.ElementName, elementAttribute.Type, choiceProperty);
+                    var jsonProperty = CreateXmlProperty(field, memberSerialization, elementAttribute.ElementName, elementAttribute.Type, choiceField);
 
                     if (names.Contains(jsonProperty.PropertyName))
                         throw new InvalidOperationException();
@@ -99,13 +97,13 @@ namespace Hypersonic
 
                 if (textAttribute != null)
                 {
-                    var jsonProperty = CreateXmlTextProperty(property, memberSerialization);
+                    var jsonProperty = CreateXmlTextProperty(field, memberSerialization);
 
                     jsonProperties.Add(jsonProperty);
                 }
                 else if (attributeAttributes.Length == 0 && elementAttributes.Length == 0)
                 {
-                    var jsonProperty = CreateXmlProperty(property, memberSerialization);
+                    var jsonProperty = CreateXmlProperty(field, memberSerialization);
 
                     jsonProperties.Add(jsonProperty);
                 }
@@ -114,12 +112,9 @@ namespace Hypersonic
             return jsonProperties;
         }
 
-        private JsonProperty CreateXmlProperty(PropertyInfo property, MemberSerialization memberSerialization, string name = null, Type type = null, PropertyInfo choiceProperty = null)
+        private JsonProperty CreateXmlProperty(FieldInfo field, MemberSerialization memberSerialization, string name = null, Type type = null, FieldInfo choiceField = null)
         {
-            if (property.GetIndexParameters().Length > 0)
-                throw new InvalidOperationException();
-
-            var jsonProperty = CreateProperty(property, memberSerialization);
+            var jsonProperty = CreateProperty(field, memberSerialization);
 
             if (!string.IsNullOrEmpty(name))
                 jsonProperty.PropertyName = name;
@@ -127,68 +122,71 @@ namespace Hypersonic
             if (type != null)
                 jsonProperty.PropertyType = type;
 
-            if (choiceProperty != null)
+            if (choiceField != null)
             {
+                if (!choiceField.FieldType.IsEnum)
+                    throw new InvalidOperationException();
+
                 jsonProperty.ShouldSerialize =
                     instance =>
                     {
-                        if (property.GetValue(instance) == null)
+                        if (field.GetValue(instance) == null)
                             return false;
 
-                        object choiceValue = choiceProperty.GetValue(instance);
-                        string choiceName = Enum.GetName(choiceProperty.PropertyType, choiceValue);
+                        object choiceValue = choiceField.GetValue(instance);
+                        string choiceName = Enum.GetName(choiceField.FieldType, choiceValue);
                         return choiceName == jsonProperty.PropertyName;
                     };
             }
             else
             {
                 jsonProperty.ShouldSerialize =
-                    instance => property.GetValue(instance) != null;
+                    instance => field.GetValue(instance) != null;
             }
 
-            var specifiedProperty = property.DeclaringType.GetProperty(jsonProperty.PropertyName + "Specified", BindingFlags.Public | BindingFlags.Instance, null, typeof(bool), Type.EmptyTypes, null);
-            if (specifiedProperty != null)
+            var specifiedField = field.DeclaringType.GetField(jsonProperty.PropertyName + "Specified", BindingFlags.Public | BindingFlags.Instance);
+            if (specifiedField != null)
             {
-                var specifiedPropertyIgnoreAttribute = specifiedProperty.GetCustomAttribute<XmlIgnoreAttribute>();
-                if (specifiedPropertyIgnoreAttribute != null)
+                if (specifiedField.FieldType != typeof(bool))
+                    throw new InvalidOperationException();
+
+                var specifiedFieldIgnoreAttribute = specifiedField.GetCustomAttribute<XmlIgnoreAttribute>();
+                if (specifiedFieldIgnoreAttribute != null)
                 {
                     jsonProperty.GetIsSpecified =
-                        instance => (bool)specifiedProperty.GetValue(instance);
+                        instance => (bool)specifiedField.GetValue(instance);
                 }
             }
 
             return jsonProperty;
         }
 
-        private JsonProperty CreateXmlTextProperty(PropertyInfo property, MemberSerialization memberSerialization)
+        private JsonProperty CreateXmlTextProperty(FieldInfo field, MemberSerialization memberSerialization)
         {
-            if (property.GetIndexParameters().Length > 0)
+            if (field.FieldType != typeof(string[]))
                 throw new InvalidOperationException();
 
-            if (property.PropertyType != typeof(string[]))
-                throw new InvalidOperationException();
-
-            var jsonProperty = CreateProperty(property, memberSerialization);
+            var jsonProperty = CreateProperty(field, memberSerialization);
 
             jsonProperty.PropertyName = "value";
             jsonProperty.PropertyType = typeof(string);
-            jsonProperty.ValueProvider = new XmlTextPropertyValueProvider(property);
+            jsonProperty.ValueProvider = new XmlTextPropertyValueProvider(field);
 
             return jsonProperty;
         }
 
         private class XmlTextPropertyValueProvider : IValueProvider
         {
-            private readonly PropertyInfo _property;
+            private readonly Func<object, object> _getter;
 
-            public XmlTextPropertyValueProvider(PropertyInfo property)
+            public XmlTextPropertyValueProvider(FieldInfo field)
             {
-                _property = property;
+                _getter = field.GetValue;
             }
 
             public object GetValue(object target)
             {
-                var value = _property.GetValue(target);
+                var value = _getter(target);
                 if (value == null)
                     return null;
 
