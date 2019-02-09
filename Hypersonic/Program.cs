@@ -41,10 +41,9 @@ namespace Hypersonic
         private const string _defaultDatabaseFileName = "hypersonic.sqlite3";
 
 #if DEBUG
-        private static readonly LoggerFactory _loggerFactory = new LoggerFactory(new[]
-        {
-            new DebugLoggerProvider((_, l) => l >= LogLevel.Information)
-        });
+        private static readonly LoggerFactory _loggerFactory = new LoggerFactory(
+            providers: new[] { new DebugLoggerProvider() },
+            filterOptions: new LoggerFilterOptions() { MinLevel = LogLevel.Information, });
 #endif
 
         private static string DefaultDatabasePath
