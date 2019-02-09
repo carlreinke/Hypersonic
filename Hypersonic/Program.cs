@@ -752,7 +752,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (library == null)
-                        throw new CommandAbortException($"Library '{name}' does not exists.");
+                        throw new CommandAbortException($"Library '{name}' does not exist.");
 
                     if (accessControlOption.HasValue())
                         library.IsAccessControlled = isAccessControlled;
@@ -804,7 +804,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (!libraryId.HasValue)
-                        throw new CommandAbortException($"Music library '{name}' does not exists.");
+                        throw new CommandAbortException($"Music library '{name}' does not exist.");
 
                     dbContext.Libraries.RemoveRange(dbContext.Libraries
                         .Where(l => l.LibraryId == libraryId));
@@ -844,7 +844,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (!libraryId.HasValue)
-                        throw new CommandAbortException($"Music library '{libraryName}' does not exists.");
+                        throw new CommandAbortException($"Music library '{libraryName}' does not exist.");
 
                     var userId = dbContext.Users
                         .Where(l => l.Name == userName)
@@ -852,7 +852,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (!userId.HasValue)
-                        throw new CommandAbortException($"User '{userName}' does not exists.");
+                        throw new CommandAbortException($"User '{userName}' does not exist.");
 
                     var libraryUser = dbContext.LibraryUsers
                         .Where(lu => lu.LibraryId == libraryId.Value)
@@ -860,7 +860,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (libraryUser != null)
-                        throw new CommandAbortException($"Access to music library '{libraryName}' is already granted user '{userName}'.");
+                        throw new CommandAbortException($"Access to music library '{libraryName}' is already granted to user '{userName}'.");
 
                     dbContext.LibraryUsers.Add(new LibraryUser
                     {
@@ -903,7 +903,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (!libraryId.HasValue)
-                        throw new CommandAbortException($"Music library '{libraryName}' does not exists.");
+                        throw new CommandAbortException($"Music library '{libraryName}' does not exist.");
 
                     var userId = dbContext.Users
                         .Where(l => l.Name == userName)
@@ -911,7 +911,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (!userId.HasValue)
-                        throw new CommandAbortException($"User '{userName}' does not exists.");
+                        throw new CommandAbortException($"User '{userName}' does not exist.");
 
                     var libraryUser = dbContext.LibraryUsers
                         .Where(lu => lu.LibraryId == libraryId.Value)
@@ -919,7 +919,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (libraryUser == null)
-                        throw new CommandAbortException($"Access to music library '{libraryName}' was already not granted user '{userName}'.");
+                        throw new CommandAbortException($"Access to music library '{libraryName}' was already not granted to user '{userName}'.");
 
                     dbContext.LibraryUsers.Remove(libraryUser);
 
@@ -1137,7 +1137,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (user == null)
-                        throw new CommandAbortException($"User '{name}' does not exists.");
+                        throw new CommandAbortException($"User '{name}' does not exist.");
 
                     if (maxBitRateOption.HasValue())
                         user.MaxBitRate = maxBitRate;
@@ -1204,7 +1204,7 @@ namespace Hypersonic
                         .SingleOrDefault();
 
                     if (!userId.HasValue)
-                        throw new CommandAbortException($"User '{name}' does not exists.");
+                        throw new CommandAbortException($"User '{name}' does not exist.");
 
                     dbContext.Users.RemoveRange(dbContext.Users
                         .Where(l => l.UserId == userId));
