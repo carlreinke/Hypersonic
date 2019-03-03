@@ -22,10 +22,15 @@ namespace Hypersonic.Tests
 {
     internal sealed class RandomPopulator
     {
+        private readonly Random _random = new Random();
+
         private readonly MediaInfoContext _dbContext;
 
         internal RandomPopulator(MediaInfoContext dbContext)
         {
+            if (dbContext == null)
+                throw new ArgumentNullException(nameof(dbContext));
+
             _dbContext = dbContext;
         }
 
@@ -268,28 +273,23 @@ namespace Hypersonic.Tests
             return trackStar;
         }
 
-        private static int RandomInt32()
+        private int RandomInt32(int min, int max)
         {
-            return new Random().Next();
+            lock (_random)
+                return _random.Next(min, max);
         }
 
-        private static int RandomInt32(int min, int max)
+        private long RandomInt64()
         {
-            return new Random().Next(min, max);
+            lock (_random)
+                return (long)(((ulong)_random.Next() << 32) | (uint)_random.Next());
         }
 
-        private static long RandomInt64()
+        private long RandomInt64(long min, long max)
         {
-            var random = new Random();
-            return (long)(((ulong)random.Next() << 32) | (uint)random.Next());
-        }
-
-        private static long RandomInt64(long min, long max)
-        {
-            var random = new Random();
-
             if (max - min < int.MaxValue)
-                return random.Next((int)(max - min)) + min;
+                lock (_random)
+                    return _random.Next((int)(max - min)) + min;
 
             ulong mask = (ulong)(max - min);
             mask |= mask >> 1;
@@ -298,20 +298,23 @@ namespace Hypersonic.Tests
             mask |= mask >> 8;
             mask |= mask >> 16;
             mask |= mask >> 32;
-            for (; ; )
+            lock (_random)
             {
-                long value = (long)((((ulong)random.Next() << 32) | (uint)random.Next()) & mask) + min;
-                if (value >= min && value < max)
-                    return value;
+                for (; ; )
+                {
+                    long value = (long)((((ulong)_random.Next() << 32) | (uint)_random.Next()) & mask) + min;
+                    if (value >= min && value < max)
+                        return value;
+                }
             }
         }
 
-        private static DateTime RandomDateTime()
+        private DateTime RandomDateTime()
         {
             return new DateTime(RandomInt64(DateTime.MinValue.Ticks, DateTime.MaxValue.Ticks + 1));
         }
 
-        private static string RandomString(int length)
+        private string RandomString(int length)
         {
             const int log2 = 5;
             const int mask = (1 << log2) - 1;
@@ -325,7 +328,8 @@ namespace Hypersonic.Tests
 
             var chars = new char[length];
             var bytes = new byte[(chars.Length * log2 - 1) / 8 + 1];
-            new Random().NextBytes(bytes);
+            lock (_random)
+                _random.NextBytes(bytes);
             var byteIndex = 0;
             var bitBuffer = 0;
             var bitCount = 0;
