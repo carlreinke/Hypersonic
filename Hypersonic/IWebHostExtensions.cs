@@ -57,7 +57,7 @@ namespace Hypersonic
 
                         var serverAddresses = host.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;
                         if (serverAddresses != null)
-                            foreach (var address in serverAddresses)
+                            foreach (string address in serverAddresses)
                                 Console.WriteLine($"Now listening on: {address}");
 
                         Console.WriteLine("Application started.");

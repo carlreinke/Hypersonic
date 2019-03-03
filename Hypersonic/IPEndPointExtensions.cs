@@ -32,7 +32,7 @@ namespace Hypersonic
 
             if (s.StartsWith("[", StringComparison.Ordinal))
             {
-                var splitIndex = s.LastIndexOf("]:", StringComparison.Ordinal);
+                int splitIndex = s.LastIndexOf("]:", StringComparison.Ordinal);
                 if (splitIndex == -1)
                     goto fail;
                 IPAddress address;
@@ -46,7 +46,7 @@ namespace Hypersonic
             }
             else
             {
-                var splitIndex = s.IndexOf(':', StringComparison.Ordinal);
+                int splitIndex = s.IndexOf(':', StringComparison.Ordinal);
                 IPAddress address;
                 ushort port;
                 if (ushort.TryParse(s.AsSpan(splitIndex + 1), NumberStyles.None, CultureInfo.InvariantCulture, out port) &&

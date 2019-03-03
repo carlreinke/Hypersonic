@@ -330,9 +330,9 @@ namespace Hypersonic.Tests
             var bytes = new byte[(chars.Length * log2 - 1) / 8 + 1];
             lock (_random)
                 _random.NextBytes(bytes);
-            var byteIndex = 0;
-            var bitBuffer = 0;
-            var bitCount = 0;
+            int byteIndex = 0;
+            int bitBuffer = 0;
+            int bitCount = 0;
             for (int i = 0; i < chars.Length; ++i)
             {
                 if (bitCount < log2)

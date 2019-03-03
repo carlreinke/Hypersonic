@@ -85,7 +85,7 @@ namespace Hypersonic.Ffmpeg
             {
                 for (; ; )
                 {
-                    var b = reader.ReadByte();
+                    int b = reader.ReadByte();
                     if (b == -1 || b == '\r' || b == '\n')
                         throw new InvalidDataException("Hash value is missing.");
 
@@ -93,12 +93,12 @@ namespace Hypersonic.Ffmpeg
                         break;
                 }
 
-                var bytes = ArrayPool<byte>.Shared.Rent(1024 / 8);
+                byte[] bytes = ArrayPool<byte>.Shared.Rent(1024 / 8);
                 try
                 {
                     for (int i = 0; ; ++i)
                     {
-                        var hexDigit = reader.ReadByte();
+                        int hexDigit = reader.ReadByte();
                         if (hexDigit == -1 || hexDigit == '\r' || hexDigit == '\n')
                             return bytes.AsSpan(0, i).ToArray();
 
@@ -129,7 +129,7 @@ namespace Hypersonic.Ffmpeg
             {
                 for (; ; )
                 {
-                    var b = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+                    int b = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
                     if (b == -1 || b == '\r' || b == '\n')
                         throw new InvalidDataException("Hash value is missing.");
 
@@ -137,12 +137,12 @@ namespace Hypersonic.Ffmpeg
                         break;
                 }
 
-                var bytes = ArrayPool<byte>.Shared.Rent(1024 / 8);
+                byte[] bytes = ArrayPool<byte>.Shared.Rent(1024 / 8);
                 try
                 {
                     for (int i = 0; ; ++i)
                     {
-                        var hexDigit = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
+                        int hexDigit = await reader.ReadByteAsync(cancellationToken).ConfigureAwait(false);
                         if (hexDigit == -1 || hexDigit == '\r' || hexDigit == '\n')
                             return bytes.AsSpan(0, i).ToArray();
 

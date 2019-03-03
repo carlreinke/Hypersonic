@@ -514,7 +514,7 @@ namespace Hypersonic
             var endPoints = new List<IPEndPoint>();
             if (bindOption.HasValue())
             {
-                foreach (var bindValue in bindOption.Values)
+                foreach (string bindValue in bindOption.Values)
                 {
                     IPEndPoint endPoint;
                     if (!IPEndPointExtensions.TryParse(bindValue, out endPoint))
@@ -530,7 +530,7 @@ namespace Hypersonic
             X509Certificate2 certificate = null;
             if (certificateOption.HasValue())
             {
-                var certificateValue = certificateOption.Value();
+                string certificateValue = certificateOption.Value();
                 try
                 {
                     certificate = new X509Certificate2(certificateValue);
@@ -627,8 +627,8 @@ namespace Hypersonic
                 const string usersHeader = "Users";
                 const string pathHeader = "Path";
 
-                var nameWidth = libraries.Aggregate(nameHeader.Length, (acc, e) => Math.Max(acc, e.Name.Length));
-                var usersWidth = libraries.Aggregate(usersHeader.Length, (acc, e) => Math.Max(acc, e.Users.Length));
+                int nameWidth = libraries.Aggregate(nameHeader.Length, (acc, e) => Math.Max(acc, e.Name.Length));
+                int usersWidth = libraries.Aggregate(usersHeader.Length, (acc, e) => Math.Max(acc, e.Users.Length));
 
                 command.Out.WriteRightPadded(nameHeader, nameWidth);
                 command.Out.Write("  ");
@@ -662,7 +662,7 @@ namespace Hypersonic
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path))
                 return ShowHelp(command) ?? -1;
 
-            var originalPath = path;
+            string originalPath = path;
 
             path = IOPath.GetFullPath(path);
             if (IOPath.GetFileName(path).Length == 0)
@@ -682,7 +682,7 @@ namespace Hypersonic
             {
                 using (var transaction = dbContext.Database.BeginTransaction(System.Data.IsolationLevel.Serializable))
                 {
-                    var libraryId = dbContext.Libraries
+                    int? libraryId = dbContext.Libraries
                         .Where(l => l.Name == name)
                         .Select(l => l.LibraryId as int?)
                         .SingleOrDefault();
@@ -728,7 +728,7 @@ namespace Hypersonic
             bool isAccessControlled = default;
             if (accessControlOption.HasValue())
             {
-                var accessControlOptionValue = accessControlOption.Value();
+                string accessControlOptionValue = accessControlOption.Value();
                 if (!TryParseYesNo(accessControlOptionValue, out isAccessControlled))
                     throw new CommandAbortException($"Unable to parse option value '{accessControlOptionValue}'.");
             }
@@ -758,7 +758,7 @@ namespace Hypersonic
 
                     if (renameOption.HasValue())
                     {
-                        var newLibraryId = dbContext.Libraries
+                        int? newLibraryId = dbContext.Libraries
                             .Where(u => u.Name == name)
                             .Select(u => u.LibraryId as int?)
                             .SingleOrDefault();
@@ -797,7 +797,7 @@ namespace Hypersonic
             {
                 using (var transaction = dbContext.Database.BeginTransaction(System.Data.IsolationLevel.Serializable))
                 {
-                    var libraryId = dbContext.Libraries
+                    int? libraryId = dbContext.Libraries
                         .Where(l => l.Name == name)
                         .Select(l => l.LibraryId as int?)
                         .SingleOrDefault();
@@ -837,7 +837,7 @@ namespace Hypersonic
             {
                 using (var transaction = dbContext.Database.BeginTransaction(System.Data.IsolationLevel.Serializable))
                 {
-                    var libraryId = dbContext.Libraries
+                    int? libraryId = dbContext.Libraries
                         .Where(l => l.Name == libraryName)
                         .Select(l => l.LibraryId as int?)
                         .SingleOrDefault();
@@ -845,7 +845,7 @@ namespace Hypersonic
                     if (!libraryId.HasValue)
                         throw new CommandAbortException($"Music library '{libraryName}' does not exist.");
 
-                    var userId = dbContext.Users
+                    int? userId = dbContext.Users
                         .Where(l => l.Name == userName)
                         .Select(l => l.UserId as int?)
                         .SingleOrDefault();
@@ -896,7 +896,7 @@ namespace Hypersonic
             {
                 using (var transaction = dbContext.Database.BeginTransaction(System.Data.IsolationLevel.Serializable))
                 {
-                    var libraryId = dbContext.Libraries
+                    int? libraryId = dbContext.Libraries
                         .Where(l => l.Name == libraryName)
                         .Select(l => l.LibraryId as int?)
                         .SingleOrDefault();
@@ -904,7 +904,7 @@ namespace Hypersonic
                     if (!libraryId.HasValue)
                         throw new CommandAbortException($"Music library '{libraryName}' does not exist.");
 
-                    var userId = dbContext.Users
+                    int? userId = dbContext.Users
                         .Where(l => l.Name == userName)
                         .Select(l => l.UserId as int?)
                         .SingleOrDefault();
@@ -972,10 +972,10 @@ namespace Hypersonic
                 const string guestHeader = "Guest";
                 const string jukeboxHeader = "Jukebox";
 
-                var nameWidth = users.Aggregate(nameHeader.Length, (acc, e) => Math.Max(acc, e.Name.Length));
-                var maxBitRateWidth = users.Aggregate(maxBitRateHeader.Length, (acc, e) => Math.Max(acc, e.MaxBitRate.Length));
-                var guestWidth = users.Aggregate(guestHeader.Length, (acc, e) => Math.Max(acc, e.IsGuest.Length));
-                var adminWidth = users.Aggregate(adminHeader.Length, (acc, e) => Math.Max(acc, e.IsAdmin.Length));
+                int nameWidth = users.Aggregate(nameHeader.Length, (acc, e) => Math.Max(acc, e.Name.Length));
+                int maxBitRateWidth = users.Aggregate(maxBitRateHeader.Length, (acc, e) => Math.Max(acc, e.MaxBitRate.Length));
+                int guestWidth = users.Aggregate(guestHeader.Length, (acc, e) => Math.Max(acc, e.IsGuest.Length));
+                int adminWidth = users.Aggregate(adminHeader.Length, (acc, e) => Math.Max(acc, e.IsAdmin.Length));
 
                 command.Out.WriteRightPadded(nameHeader, nameWidth);
                 command.Out.Write("  ");
@@ -1019,7 +1019,7 @@ namespace Hypersonic
             int maxBitRate = 128000;
             if (maxBitRateOption.HasValue())
             {
-                var maxBitRateValue = maxBitRateOption.Value();
+                string maxBitRateValue = maxBitRateOption.Value();
                 if (!TryParseNonNegativeInt32(maxBitRateValue, out maxBitRate))
                     throw new CommandAbortException($"Unable to parse maximum bit rate '{maxBitRateValue}'.");
             }
@@ -1041,7 +1041,7 @@ namespace Hypersonic
             {
                 using (var transaction = dbContext.Database.BeginTransaction(System.Data.IsolationLevel.Serializable))
                 {
-                    var userId = dbContext.Users
+                    int? userId = dbContext.Users
                         .Where(u => u.Name == name)
                         .Select(u => u.UserId as int?)
                         .SingleOrDefault();
@@ -1085,7 +1085,7 @@ namespace Hypersonic
             int maxBitRate = default;
             if (maxBitRateOption.HasValue())
             {
-                var maxBitRateValue = maxBitRateOption.Value();
+                string maxBitRateValue = maxBitRateOption.Value();
                 if (!TryParseNonNegativeInt32(maxBitRateValue, out maxBitRate))
                     throw new CommandAbortException($"Unable to parse maximum bit rate '{maxBitRateValue}'.");
             }
@@ -1093,7 +1093,7 @@ namespace Hypersonic
             bool isAdmin = default;
             if (adminOption.HasValue())
             {
-                var adminOptionValue = adminOption.Value();
+                string adminOptionValue = adminOption.Value();
                 if (!TryParseYesNo(adminOptionValue, out isAdmin))
                     throw new CommandAbortException($"Unable to parse option value '{adminOptionValue}'.");
             }
@@ -1101,7 +1101,7 @@ namespace Hypersonic
             bool isGuest = default;
             if (guestOption.HasValue())
             {
-                var guestOptionValue = guestOption.Value();
+                string guestOptionValue = guestOption.Value();
                 if (!TryParseYesNo(guestOptionValue, out isGuest))
                     throw new CommandAbortException($"Unable to parse option value '{guestOptionValue}'.");
             }
@@ -1109,7 +1109,7 @@ namespace Hypersonic
             bool canJukebox = default;
             if (jukeboxOption.HasValue())
             {
-                var jukeboxOptionValue = jukeboxOption.Value();
+                string jukeboxOptionValue = jukeboxOption.Value();
                 if (!TryParseYesNo(jukeboxOptionValue, out canJukebox))
                     throw new CommandAbortException($"Unable to parse option value '{jukeboxOptionValue}'.");
             }
@@ -1152,7 +1152,7 @@ namespace Hypersonic
 
                     if (renameOption.HasValue())
                     {
-                        var newUserId = dbContext.Users
+                        int? newUserId = dbContext.Users
                             .Where(u => u.Name == name)
                             .Select(u => u.UserId as int?)
                             .SingleOrDefault();
@@ -1197,7 +1197,7 @@ namespace Hypersonic
             {
                 using (var transaction = dbContext.Database.BeginTransaction(System.Data.IsolationLevel.Serializable))
                 {
-                    var userId = dbContext.Users
+                    int? userId = dbContext.Users
                         .Where(u => u.Name == name)
                         .Select(u => u.UserId as int?)
                         .SingleOrDefault();
@@ -1228,7 +1228,7 @@ namespace Hypersonic
                 using (var stream = new Ffmpeg.FfmpegStream("ffmpeg", arguments))
                 using (var reader = new StreamReader(stream))
                 {
-                    var line = reader.ReadLine();
+                    string line = reader.ReadLine();
                     if (!line.StartsWith("ffmpeg version ", StringComparison.Ordinal))
                         throw new CommandAbortException("ffmpeg is not functional.");
                 }
@@ -1243,7 +1243,7 @@ namespace Hypersonic
                 using (var stream = new Ffmpeg.FfmpegStream("ffplay", arguments))
                 using (var reader = new StreamReader(stream))
                 {
-                    var line = reader.ReadLine();
+                    string line = reader.ReadLine();
                     if (!line.StartsWith("ffplay version ", StringComparison.Ordinal))
                         throw new CommandAbortException("ffplay is not functional.");
                 }
@@ -1258,7 +1258,7 @@ namespace Hypersonic
                 using (var stream = new Ffmpeg.FfmpegStream("ffprobe", arguments))
                 using (var reader = new StreamReader(stream))
                 {
-                    var line = reader.ReadLine();
+                    string line = reader.ReadLine();
                     if (!line.StartsWith("ffprobe version ", StringComparison.Ordinal))
                         throw new CommandAbortException("ffprobe is not functional.");
                 }
@@ -1352,9 +1352,9 @@ namespace Hypersonic
             var chars = new char[(bits - 1) / log2 + 1];
             var bytes = new byte[(chars.Length * log2 - 1) / 8 + 1];
             RandomNumberGenerator.Fill(bytes);
-            var byteIndex = 0;
-            var bitBuffer = 0;
-            var bitCount = 0;
+            int byteIndex = 0;
+            int bitBuffer = 0;
+            int bitCount = 0;
             for (int i = 0; i < chars.Length; ++i)
             {
                 if (bitCount < log2)

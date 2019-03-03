@@ -28,7 +28,7 @@ namespace Hypersonic
             if (length < 0)
                 throw new ArgumentOutOfRangeException(nameof(length));
 
-            var sLength = s?.Length ?? 0;
+            int sLength = s?.Length ?? 0;
             if (length > sLength)
                 writer.Write(new string(' ', length - sLength));
             writer.Write(s);
@@ -42,7 +42,7 @@ namespace Hypersonic
                 throw new ArgumentOutOfRangeException(nameof(length));
 
             writer.Write(s);
-            var sLength = s?.Length ?? 0;
+            int sLength = s?.Length ?? 0;
             if (length > sLength)
                 writer.Write(new string(' ', length - sLength));
         }

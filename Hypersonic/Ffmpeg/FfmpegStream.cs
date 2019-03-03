@@ -40,7 +40,7 @@ namespace Hypersonic.Ffmpeg
 #if DEBUG
             var builder = new System.Text.StringBuilder();
             builder.Append('\'').Append(Escape(executable)).Append('\'');
-            foreach (var argument in arguments)
+            foreach (string argument in arguments)
                 builder.Append(' ').Append('\'').Append(Escape(argument)).Append('\'');
             Debug.WriteLine("Starting {0}...", new[] { builder.ToString() });
 
@@ -56,7 +56,7 @@ namespace Hypersonic.Ffmpeg
             _process.StartInfo.CreateNoWindow = true;
             _process.StartInfo.UseShellExecute = false;
             _process.StartInfo.FileName = executable;
-            foreach (var argument in arguments)
+            foreach (string argument in arguments)
                 _process.StartInfo.ArgumentList.Add(argument);
             _process.StartInfo.RedirectStandardInput = true;
             _process.StartInfo.RedirectStandardOutput = true;

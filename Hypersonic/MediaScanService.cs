@@ -191,7 +191,7 @@ namespace Hypersonic
                 {
                     var directoryInfo = new DirectoryInfo(directory.Path);
 
-                    var modified = await ScanDirectoryAsync(dbContext, directory, directoryInfo, force, cancellationToken).ConfigureAwait(false);
+                    bool modified = await ScanDirectoryAsync(dbContext, directory, directoryInfo, force, cancellationToken).ConfigureAwait(false);
                     if (modified)
                         library.ContentModified = DateTime.UtcNow;
 
@@ -264,7 +264,7 @@ namespace Hypersonic
         {
             Debug.WriteLine("Scanning '{0}'...", new[] { directoryInfo.FullName });
 
-            var modified = false;
+            bool modified = false;
 
             if (!directoryInfo.Exists)
                 goto delete;
@@ -417,7 +417,7 @@ namespace Hypersonic
         {
             Debug.WriteLine("Scanning '{0}'...", new[] { fileInfo.FullName });
 
-            var modified = false;
+            bool modified = false;
 
             if (!fileInfo.Exists)
                 goto delete;
@@ -466,7 +466,7 @@ namespace Hypersonic
                         }
                     }
 
-                    var formatName = GetFormatName(result);
+                    string formatName = GetFormatName(result);
 
                     file.FormatName = formatName;
 
@@ -512,7 +512,7 @@ namespace Hypersonic
             long? newCoverStreamHash = null;
             if (newCoverStream != null)
             {
-                var streamHashBytes = await FfmpegStreamHasher.HashAsync(fileInfo.FullName, newCoverStream.index, cancellationToken: cancellationToken).ConfigureAwait(false);
+                byte[] streamHashBytes = await FfmpegStreamHasher.HashAsync(fileInfo.FullName, newCoverStream.index, cancellationToken: cancellationToken).ConfigureAwait(false);
                 if (streamHashBytes != null)
                     newCoverStreamHash = BinaryPrimitives.ReadInt64BigEndian(streamHashBytes);
                 else
@@ -627,29 +627,29 @@ namespace Hypersonic
 
         private static async Task ScanTrackAsync(MediaInfoContext dbContext, FileInfo fileInfo, ffprobeType result, streamType stream, Track track, int? coverPictureId, CancellationToken cancellationToken)
         {
-            var codecName = GetCodecName(result, stream);
-            var bitRate = GetBitRate(result, stream);
-            var duration = GetDuration(result, stream);
+            string codecName = GetCodecName(result, stream);
+            int? bitRate = GetBitRate(result, stream);
+            float? duration = GetDuration(result, stream);
             if (!duration.HasValue && bitRate > 0 && result.format.sizeSpecified)
                 duration = (float)((double)result.format.size * 8 / bitRate);
 
             var tags = GetTags(result, stream);
 
-            var artistName = GetArtistName(tags);
-            var artistSortName = GetArtistSortName(tags);
-            var albumArtistName = GetAlbumArtistName(tags) ?? artistName;
-            var albumArtistSortName = GetAlbumArtistSortName(tags) ?? artistSortName;
-            var albumTitle = GetAlbumTitle(tags);
-            var albumSortTitle = GetAlbumSortTitle(tags);
-            var discNumber = GetDiscNumber(tags);
-            var trackNumber = GetTrackNumber(tags);
-            var trackTitle = GetTrackTitle(tags);
-            var trackSortTitle = GetTrackSortTitle(tags);
-            var date = GetDate(tags);
-            var originalDate = GetOriginalDate(tags);
-            var genreNames = GetGenreNames(tags);
-            var albumGain = GetAlbumGain(tags);
-            var trackGain = GetTrackGain(tags);
+            string artistName = GetArtistName(tags);
+            string artistSortName = GetArtistSortName(tags);
+            string albumArtistName = GetAlbumArtistName(tags) ?? artistName;
+            string albumArtistSortName = GetAlbumArtistSortName(tags) ?? artistSortName;
+            string albumTitle = GetAlbumTitle(tags);
+            string albumSortTitle = GetAlbumSortTitle(tags);
+            int? discNumber = GetDiscNumber(tags);
+            int? trackNumber = GetTrackNumber(tags);
+            string trackTitle = GetTrackTitle(tags);
+            string trackSortTitle = GetTrackSortTitle(tags);
+            int? date = GetDate(tags);
+            int? originalDate = GetOriginalDate(tags);
+            string[] genreNames = GetGenreNames(tags);
+            float? albumGain = GetAlbumGain(tags);
+            float? trackGain = GetTrackGain(tags);
 
             if (artistSortName == artistName)
                 artistSortName = null;
@@ -714,7 +714,7 @@ namespace Hypersonic
 
             if (result.format.format_name.Contains(',', StringComparison.Ordinal))
             {
-                var names = result.format.format_name.Split(',');
+                string[] names = result.format.format_name.Split(',');
 
                 if (names.Contains("mp4"))
                     return "mp4";
@@ -731,7 +731,7 @@ namespace Hypersonic
 
             if (stream.codec_name.Contains(',', StringComparison.Ordinal))
             {
-                var names = stream.codec_name.Split(',');
+                string[] names = stream.codec_name.Split(',');
 
                 _ = result;
                 _ = names;
@@ -1064,7 +1064,7 @@ namespace Hypersonic
         {
             if (s.Contains('/', StringComparison.Ordinal))
             {
-                var fields = s.Split('/', 2);
+                string[] fields = s.Split('/', 2);
                 if (TryParseInt(fields[0], out numerator) &&
                     TryParseInt(fields[1], out denominator))
                 {
@@ -1091,7 +1091,7 @@ namespace Hypersonic
                 if (indexOfT != -1)
                     s = s.Substring(0, indexOfT);
 
-                var fields = s.Split('-', 3);
+                string[] fields = s.Split('-', 3);
 
                 if (TryParseInt(fields[0], out year))
                 {
@@ -1135,7 +1135,7 @@ namespace Hypersonic
 
         private static async Task<int> GetOrAddArtistAsync(MediaInfoContext dbContext, string artistName, CancellationToken cancellationToken)
         {
-            var artistId = await dbContext.Artists
+            int? artistId = await dbContext.Artists
                 .Where(a => (a.Name == null && artistName == null) || a.Name == artistName)
                 .Select(a => a.ArtistId as int?)
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false) ??
@@ -1163,7 +1163,7 @@ namespace Hypersonic
             if (albumTitle == null)
                 date = null;
 
-            var albumId = await dbContext.Albums
+            int? albumId = await dbContext.Albums
                 .Where(a => (!a.ArtistId.HasValue && !artistId.HasValue) || a.ArtistId == artistId)
                 .Where(a => (a.Title == null && albumTitle == null) || a.Title == albumTitle)
                 .Where(a => (!a.Date.HasValue && !date.HasValue) || a.Date / 10000 == date / 10000)
@@ -1194,7 +1194,7 @@ namespace Hypersonic
 
         private static async Task<int> GetOrAddGenreAsync(MediaInfoContext dbContext, string genreName, CancellationToken cancellationToken)
         {
-            var genreId = await dbContext.Genres
+            int? genreId = await dbContext.Genres
                 .Where(g => g.Name == genreName)
                 .Select(g => g.GenreId as int?)
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false) ??

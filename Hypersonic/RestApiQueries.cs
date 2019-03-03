@@ -1294,7 +1294,7 @@ namespace Hypersonic
             var positiveTerms = new List<string>();
             var negativeTerms = new List<string>();
 
-            foreach (var term in query.Split(" ", 100, StringSplitOptions.RemoveEmptyEntries))
+            foreach (string term in query.Split(" ", 100, StringSplitOptions.RemoveEmptyEntries))
                 if (term.StartsWith('-'))
                     negativeTerms.Add(" " + term.Substring(1) + " ");
                 else
@@ -1513,7 +1513,7 @@ namespace Hypersonic
 
             bool Match(string s1, string s2 = null, string s3 = null)
             {
-                foreach (var term in positiveTerms)
+                foreach (string term in positiveTerms)
                 {
                     if (s1 != null && (" " + s1 + " ").Contains(term, StringComparison.CurrentCultureIgnoreCase))
                         continue;
@@ -1525,7 +1525,7 @@ namespace Hypersonic
                     return false;
                 }
 
-                foreach (var term in negativeTerms)
+                foreach (string term in negativeTerms)
                 {
                     if (s1 != null && (" " + s1 + " ").Contains(term, StringComparison.CurrentCultureIgnoreCase))
                         return false;
@@ -1760,7 +1760,7 @@ namespace Hypersonic
 
             var tracksQuery = GetTracksQuery(dbContext, apiUserId);
 
-            foreach (var index in songIndexes)
+            foreach (int index in songIndexes)
             {
                 var playlistTrack = await dbContext.PlaylistTracks
                     // where playlist track is in requested playlist
@@ -1964,7 +1964,7 @@ namespace Hypersonic
 
         internal static async Task<bool> CanAddTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, CancellationToken cancellationToken)
         {
-            foreach (var trackId in trackIds)
+            foreach (int trackId in trackIds)
             {
                 IQueryable<Track> trackByIdQuery = GetTrackByIdQuery(dbContext, apiUserId, trackId);
 

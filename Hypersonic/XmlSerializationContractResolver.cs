@@ -186,7 +186,7 @@ namespace Hypersonic
 
             public object GetValue(object target)
             {
-                var value = _getter(target);
+                object value = _getter(target);
                 if (value == null)
                     return null;
 

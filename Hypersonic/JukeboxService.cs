@@ -141,7 +141,7 @@ namespace Hypersonic
                 if (_playlistIndex != -1)
                 {
                     // Attempt to preserve the current track.
-                    var trackId = _playlist[_playlistIndex];
+                    int trackId = _playlist[_playlistIndex];
 
                     _playlist.Clear();
                     _playlist.AddRange(trackIds);
@@ -221,7 +221,7 @@ namespace Hypersonic
             {
                 for (int i = _playlist.Count - 1; i > 0; --i)
                 {
-                    var j = random.Next(i + 1);
+                    int j = random.Next(i + 1);
 
                     int temp = _playlist[i];
                     _playlist[i] = _playlist[j];
@@ -280,8 +280,8 @@ namespace Hypersonic
             if (index >= list.Count)
                 return list.LastIndexOf(item);
 
-            var after = list.IndexOf(item, index);
-            var before = list.LastIndexOf(item, index);
+            int after = list.IndexOf(item, index);
+            int before = list.LastIndexOf(item, index);
 
             if (after == -1)
                 return before;
@@ -390,7 +390,7 @@ namespace Hypersonic
                             if (!_playing)
                                 goto restartPlayer;
 
-                            var trackId = _playlistIndex != -1 ? _playlist[_playlistIndex] : -1;
+                            int trackId = _playlistIndex != -1 ? _playlist[_playlistIndex] : -1;
                             if (trackId == -1)
                                 goto nextTrack;
 
@@ -431,7 +431,7 @@ namespace Hypersonic
                         {
                             inStream.InputStream.Close();
 
-                            var replayGainScale = (float)Math.Pow(10, (track.TrackGain ?? 0) / 20);
+                            float replayGainScale = MathF.Pow(10, (track.TrackGain ?? 0) / 20);
 
                             int bufferOffset = 0;
                             int bufferCount = 0;
@@ -446,7 +446,7 @@ namespace Hypersonic
                                     if (!_playing)
                                         goto restartPlayer;
 
-                                    var trackId = _playlistIndex != -1 ? _playlist[_playlistIndex] : -1;
+                                    int trackId = _playlistIndex != -1 ? _playlist[_playlistIndex] : -1;
                                     if (playerTrackId != trackId || playerTrackPosition != _trackPosition)
                                         goto restartTrack;
 
@@ -456,7 +456,7 @@ namespace Hypersonic
 
                                 try
                                 {
-                                    var readCount = inStream.Read(buffer.Slice(bufferOffset + bufferCount));
+                                    int readCount = inStream.Read(buffer.Slice(bufferOffset + bufferCount));
                                     if (readCount == 0)
                                         break;
                                     bufferCount += readCount;
@@ -469,13 +469,13 @@ namespace Hypersonic
 
                                 var samplesSpan = sampleBuffer.AsSpan(bufferOffset / sizeof(float), bufferCount / sizeof(float));
 
-                                var scale = replayGainScale * _gainScale;
+                                float scale = replayGainScale * _gainScale;
                                 for (int i = 0; i < samplesSpan.Length; ++i)
                                     samplesSpan[i] *= scale;
 
                                 try
                                 {
-                                    var writeCount = samplesSpan.Length * sizeof(float);
+                                    int writeCount = samplesSpan.Length * sizeof(float);
                                     outStream.Write(buffer.Slice(bufferOffset, writeCount));
                                     bufferOffset += writeCount;
                                     bufferCount -= writeCount;

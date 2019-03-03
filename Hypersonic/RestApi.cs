@@ -77,7 +77,7 @@ namespace Hypersonic
 
             // Allow request to specify any file extension.
             {
-                var splitPath = context.Request.Path.Value.Split('.', 3);
+                string[] splitPath = context.Request.Path.Value.Split('.', 3);
 
                 if (splitPath.Length > 2)
                     goto status404;
@@ -241,7 +241,7 @@ namespace Hypersonic
                 }
                 case "jsonp":
                 {
-                    var callback = GetOptionalStringParameterValue(context, "callback");
+                    string callback = GetOptionalStringParameterValue(context, "callback");
                     if (string.IsNullOrEmpty(callback))
                         callback = "callback";
 
@@ -274,10 +274,10 @@ namespace Hypersonic
             if (apiContext.MinorVersion > _apiMinorVersion)
                 throw RestApiErrorException.ServerMustUpgradeError();
 
-            var username = GetRequiredStringParameterValue(context, "u");
-            var password = GetOptionalStringParameterValue(context, "p");
-            var passwordToken = GetOptionalStringParameterValue(context, "t");
-            var passwordSalt = GetOptionalStringParameterValue(context, "s");
+            string username = GetRequiredStringParameterValue(context, "u");
+            string password = GetOptionalStringParameterValue(context, "p");
+            string passwordToken = GetOptionalStringParameterValue(context, "t");
+            string passwordSalt = GetOptionalStringParameterValue(context, "s");
 
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
@@ -294,7 +294,7 @@ namespace Hypersonic
                 if (passwordToken != null || passwordSalt != null)
                     throw RestApiErrorException.GenericError("Specified values for both 'p' and 't' and/or 's'.");
 
-                var userPassword = user != null ? user.Password : string.Empty;
+                string userPassword = user != null ? user.Password : string.Empty;
 
                 passwordIsWrong = !ConstantTimeComparisons.ConstantTimeEquals(password, userPassword);
             }
@@ -312,7 +312,7 @@ namespace Hypersonic
                 if (passwordSalt == null)
                     throw RestApiErrorException.RequiredParameterMissingError("s");
 
-                var userPassword = user != null ? user.Password : string.Empty;
+                string userPassword = user != null ? user.Password : string.Empty;
 
                 // This security mechanism is pretty terrible.  It is vulnerable to both
                 // timing and replay attacks.
@@ -321,7 +321,7 @@ namespace Hypersonic
                 using (var md5 = System.Security.Cryptography.MD5.Create())
 #pragma warning restore CA5351 // Do not use insecure cryptographic algorithm MD5.
                 {
-                    var hash = md5.ComputeHash(Encoding.UTF8.GetBytes(userPassword + passwordSalt));
+                    byte[] hash = md5.ComputeHash(Encoding.UTF8.GetBytes(userPassword + passwordSalt));
                     passwordIsWrong = !ConstantTimeComparisons.ConstantTimeEquals(passwordTokenBytes, hash);
                 }
             }
@@ -671,7 +671,7 @@ namespace Hypersonic
                 }
                 case "byGenre":
                 {
-                    var genre = GetRequiredStringParameterValue(context, "genre");
+                    string genre = GetRequiredStringParameterValue(context, "genre");
 
                     albumList2 = await RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, apiUserId, musicFolderId, offset, size, genre, context.RequestAborted).ConfigureAwait(false);
                     break;
@@ -686,7 +686,7 @@ namespace Hypersonic
         private static async Task HandleGetRandomSongsRequestAsync(HttpContext context)
         {
             int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
-            var genre = GetOptionalStringParameterValue(context, "genre");
+            string genre = GetOptionalStringParameterValue(context, "genre");
             int? fromYear = GetOptionalInt32ParameterValue(context, "fromYear");
             int? toYear = GetOptionalInt32ParameterValue(context, "toYear");
             int size = GetOptionalInt32ParameterValue(context, "size") ?? 10;
@@ -705,7 +705,7 @@ namespace Hypersonic
         private static async Task HandleGetSongsByGenreRequestAsync(HttpContext context)
         {
             int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
-            var genre = GetRequiredStringParameterValue(context, "genre");
+            string genre = GetRequiredStringParameterValue(context, "genre");
             int count = GetOptionalInt32ParameterValue(context, "count") ?? 10;
             if (count < 1 || count > 500)
                 throw RestApiErrorException.GenericError("Invalid value for 'count'.");
@@ -750,7 +750,7 @@ namespace Hypersonic
         private static async Task HandleSearch3RequestAsync(HttpContext context)
         {
             int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
-            var query = GetRequiredStringParameterValue(context, "query");
+            string query = GetRequiredStringParameterValue(context, "query");
             int artistCount = GetOptionalInt32ParameterValue(context, "artistCount") ?? 20;
             if (artistCount < 1 || artistCount > 500)
                 throw RestApiErrorException.GenericError("Invalid value for 'artistCount'.");
@@ -948,7 +948,7 @@ namespace Hypersonic
                        : apiContext.User.MaxBitRate == 0 ? maxBitRate
                        : Math.Min(maxBitRate, apiContext.User.MaxBitRate);
 
-            var gain = track.AlbumGain ?? track.TrackGain ?? 0;
+            float gain = track.AlbumGain ?? track.TrackGain ?? 0;
 
             switch (format)
             {
@@ -969,7 +969,7 @@ namespace Hypersonic
                     }
                     else
                     {
-                        var bitRate = useTrackBitRate ? track.BitRate.Value
+                        int bitRate = useTrackBitRate ? track.BitRate.Value
                                     : maxBitRate != 0 ? maxBitRate
                                     : 256000;
 
@@ -1009,7 +1009,7 @@ namespace Hypersonic
                     }
                     else
                     {
-                        var bitRate = useTrackBitRate ? track.BitRate.Value
+                        int bitRate = useTrackBitRate ? track.BitRate.Value
                                     : maxBitRate != 0 ? maxBitRate
                                     : 256000;
 
@@ -1178,20 +1178,20 @@ namespace Hypersonic
                     throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
             }
 
-            var artistIds = GetArtistIdParameterValues(context, "artistId");
-            var albumIds = GetAlbumIdParameterValues(context, "albumId");
+            int[] artistIds = GetArtistIdParameterValues(context, "artistId");
+            int[] albumIds = GetAlbumIdParameterValues(context, "albumId");
 
             var apiContext = (ApiContext)context.Items[_apiContextKey];
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            foreach (var artistId in artistIds)
+            foreach (int artistId in artistIds)
                 await RestApiQueries.StarArtistAsync(dbContext, apiUserId, artistId, context.RequestAborted).ConfigureAwait(false);
 
-            foreach (var albumId in albumIds)
+            foreach (int albumId in albumIds)
                 await RestApiQueries.StarAlbumAsync(dbContext, apiUserId, albumId, context.RequestAborted).ConfigureAwait(false);
 
-            foreach (var trackId in trackIds)
+            foreach (int trackId in trackIds)
                 await RestApiQueries.StarTrackAsync(dbContext, apiUserId, trackId, context.RequestAborted).ConfigureAwait(false);
 
             await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
@@ -1213,20 +1213,20 @@ namespace Hypersonic
                     throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
             }
 
-            var artistIds = GetArtistIdParameterValues(context, "artistId");
-            var albumIds = GetAlbumIdParameterValues(context, "albumId");
+            int[] artistIds = GetArtistIdParameterValues(context, "artistId");
+            int[] albumIds = GetAlbumIdParameterValues(context, "albumId");
 
             var apiContext = (ApiContext)context.Items[_apiContextKey];
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            foreach (var artistId in artistIds)
+            foreach (int artistId in artistIds)
                 await RestApiQueries.UnstarArtistAsync(dbContext, apiUserId, artistId, context.RequestAborted).ConfigureAwait(false);
 
-            foreach (var albumId in albumIds)
+            foreach (int albumId in albumIds)
                 await RestApiQueries.UnstarAlbumAsync(dbContext, apiUserId, albumId, context.RequestAborted).ConfigureAwait(false);
 
-            foreach (var trackId in trackIds)
+            foreach (int trackId in trackIds)
                 await RestApiQueries.UnstarTrackAsync(dbContext, apiUserId, trackId, context.RequestAborted).ConfigureAwait(false);
 
             await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
@@ -1430,8 +1430,8 @@ namespace Hypersonic
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
             var mediaScanService = context.RequestServices.GetRequiredService<MediaScanService>();
 
-            var isScanning = mediaScanService.IsScanning;
-            var fileCount = await dbContext.Files.CountAsync(context.RequestAborted).ConfigureAwait(false);
+            bool isScanning = mediaScanService.IsScanning;
+            int fileCount = await dbContext.Files.CountAsync(context.RequestAborted).ConfigureAwait(false);
 
             var scanStatus = new Subsonic.ScanStatus()
             {
@@ -1455,8 +1455,8 @@ namespace Hypersonic
 
             _ = Task.Run(() => mediaScanService.ScanAsync());
 
-            var isScanning = mediaScanService.IsScanning;
-            var fileCount = await dbContext.Files.CountAsync(context.RequestAborted).ConfigureAwait(false);
+            bool isScanning = mediaScanService.IsScanning;
+            int fileCount = await dbContext.Files.CountAsync(context.RequestAborted).ConfigureAwait(false);
 
             var scanStatus = new Subsonic.ScanStatus()
             {
@@ -1730,7 +1730,7 @@ namespace Hypersonic
         {
             var separatorSpan = ".".AsSpan();
 
-            var index = span.IndexOf(separatorSpan, StringComparison.Ordinal);
+            int index = span.IndexOf(separatorSpan, StringComparison.Ordinal);
             if (index == -1)
                 index = span.Length;
             var majorVersionSpan = span.Slice(0, index);
