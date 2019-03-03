@@ -523,6 +523,10 @@ namespace Hypersonic
             int count = GetOptionalInt32ParameterValue(context, "count") ?? 20;
             bool includeNotPresent = GetOptionalBooleanParameterValue(context, "includeNotPresent") ?? false;
 
+            _ = id;
+            _ = count;
+            _ = includeNotPresent;
+
             var artistInfo2 = new Subsonic.ArtistInfo2
             {
                 biography = null,
@@ -542,6 +546,8 @@ namespace Hypersonic
         private static Task HandleGetAlbum2InfoRequestAsync(HttpContext context)
         {
             int id = GetRequiredAlbumIdParameterValue(context, "id");
+
+            _ = id;
 
             var albumInfo = new Subsonic.AlbumInfo
             {
@@ -563,6 +569,9 @@ namespace Hypersonic
             int id = GetRequiredArtistIdParameterValue(context, "id");
             int count = GetOptionalInt32ParameterValue(context, "count") ?? 50;
 
+            _ = id;
+            _ = count;
+
             var similarSongs2 = new Subsonic.SimilarSongs2
             {
                 song = null,
@@ -575,6 +584,9 @@ namespace Hypersonic
         {
             string artist = GetRequiredStringParameterValue(context, "artist");
             int count = GetOptionalInt32ParameterValue(context, "count") ?? 50;
+
+            _ = artist;
+            _ = count;
 
             var topSongs = new Subsonic.TopSongs
             {
@@ -1682,18 +1694,6 @@ namespace Hypersonic
         private static bool TryParseInt32(ReadOnlySpan<char> span, out int value)
         {
             return int.TryParse(span, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out value);
-        }
-
-        private static bool TryParseInt32(ReadOnlySpan<char> span, out int? value)
-        {
-            if (int.TryParse(span, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int tempValue))
-            {
-                value = tempValue;
-                return true;
-            }
-
-            value = default;
-            return false;
         }
 
         private static bool TryParseInt64(ReadOnlySpan<char> span, out long value)

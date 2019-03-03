@@ -733,6 +733,9 @@ namespace Hypersonic
             {
                 var names = stream.codec_name.Split(',');
 
+                _ = result;
+                _ = names;
+
                 Debug.WriteLine($"No preferred name for codec '{stream.codec_name}'.");
             }
 

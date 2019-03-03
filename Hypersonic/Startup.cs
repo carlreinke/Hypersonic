@@ -89,6 +89,7 @@ namespace Hypersonic
             }
         }
 
+#if !DEBUG
         private static void HandleException(IApplicationBuilder app)
         {
             app.Run(context =>
@@ -97,5 +98,6 @@ namespace Hypersonic
                 return Task.CompletedTask;
             });
         }
+#endif
     }
 }

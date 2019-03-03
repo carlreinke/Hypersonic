@@ -2093,33 +2093,6 @@ namespace Hypersonic
 
         #endregion
 
-        private static IQueryable<Directory> GetDirectoriesQuery(MediaInfoContext dbContext, int apiUserId, int? musicFolderId)
-        {
-            return dbContext.Directories
-                // where directory is in requested library (if specified)
-                .Where(d => !musicFolderId.HasValue || d.LibraryId == musicFolderId.Value)
-                // where library containing directory is accessible by user
-                .Where(d => !d.Library.IsAccessControlled || d.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<Directory> GetDirectoryByIdQuery(MediaInfoContext dbContext, int apiUserId, int directoryId)
-        {
-            return dbContext.Directories
-                // where directory is requested directory
-                .Where(d => d.DirectoryId == directoryId)
-                // where library containing directory is accessible by user
-                .Where(d => !d.Library.IsAccessControlled || d.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<File> GetFilesQuery(MediaInfoContext dbContext, int apiUserId, int? musicFolderId)
-        {
-            return dbContext.Files
-                // where file is in requested library (if specified)
-                .Where(f => !musicFolderId.HasValue || f.LibraryId == musicFolderId.Value)
-                // where library containing file is accessible by user
-                .Where(f => !f.Library.IsAccessControlled || f.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
         private static IQueryable<Track> GetTracksQuery(MediaInfoContext dbContext, int apiUserId)
         {
             return dbContext.Tracks

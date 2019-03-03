@@ -44,7 +44,7 @@ namespace Hypersonic
 
         private bool _playing;
 
-        private List<int> _playlist = new List<int>();
+        private readonly List<int> _playlist = new List<int>();
 
         private int _playlistIndex = -1;
 
