@@ -444,9 +444,51 @@ namespace Hypersonic
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.musicFolders, musicFolders).ConfigureAwait(false);
         }
 
-        private static Task HandleGetIndexesRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static async Task HandleGetIndexesRequestAsync(HttpContext context)
+        {
+            int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
+            long? ifModifiedSince = GetOptionalInt64ParameterValue(context, "ifModifiedSince");
 
-        private static Task HandleGetMusicDirectoryRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+            int apiUserId = apiContext.User.UserId;
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            _ = ifModifiedSince;
+
+            Subsonic.ArtistsID3 artists = await RestApiQueries.GetArtistsAsync(dbContext, apiUserId, musicFolderId, context.RequestAborted).ConfigureAwait(false);
+
+            Subsonic.Indexes indexes = CreateIndexes(artists);
+
+            await WriteResponseAsync(context, Subsonic.ItemChoiceType.indexes, indexes).ConfigureAwait(false);
+        }
+
+        private static async Task HandleGetMusicDirectoryRequestAsync(HttpContext context)
+        {
+            string id = GetRequiredStringParameterValue(context, "id");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+            int apiUserId = apiContext.User.UserId;
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            if (TryParseDirectoryArtistId(id, out int artistId))
+            {
+                Subsonic.ArtistWithAlbumsID3 artist = await RestApiQueries.GetArtistAsync(dbContext, apiUserId, artistId, context.RequestAborted).ConfigureAwait(false);
+
+                Subsonic.Directory directory = CreateDirectory(artist);
+
+                await WriteResponseAsync(context, Subsonic.ItemChoiceType.directory, directory).ConfigureAwait(false);
+            }
+            else if (TryParseDirectoryAlbumId(id, out int albumId))
+            {
+                Subsonic.AlbumWithSongsID3 album = await RestApiQueries.GetAlbumAsync(dbContext, apiUserId, albumId, context.RequestAborted).ConfigureAwait(false);
+
+                Subsonic.Directory directory = CreateDirectory(album);
+
+                await WriteResponseAsync(context, Subsonic.ItemChoiceType.directory, directory).ConfigureAwait(false);
+            }
+
+            throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
+        }
 
         private static async Task HandleGetGenresRequestAsync(HttpContext context)
         {
@@ -515,7 +557,35 @@ namespace Hypersonic
 
         private static Task HandleGetVideoInfoRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
 
-        private static Task HandleGetArtistInfoRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static Task HandleGetArtistInfoRequestAsync(HttpContext context)
+        {
+            string id = GetRequiredStringParameterValue(context, "id");
+            int count = GetOptionalInt32ParameterValue(context, "count") ?? 20;
+            bool includeNotPresent = GetOptionalBooleanParameterValue(context, "includeNotPresent") ?? false;
+
+            if (!TryParseDirectoryArtistId(id, out _) &&
+                !TryParseDirectoryAlbumId(id, out _) &&
+                !TryParseTrackId(id, out _))
+            {
+                throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
+            }
+
+            _ = count;
+            _ = includeNotPresent;
+
+            var artistInfo = new Subsonic.ArtistInfo
+            {
+                biography = null,
+                musicBrainzId = null,
+                lastFmUrl = null,
+                smallImageUrl = null,
+                mediumImageUrl = null,
+                largeImageUrl = null,
+                similarArtist = null,
+            };
+
+            return WriteResponseAsync(context, Subsonic.ItemChoiceType.artistInfo, artistInfo);
+        }
 
         private static Task HandleGetArtistInfo2RequestAsync(HttpContext context)
         {
@@ -541,7 +611,28 @@ namespace Hypersonic
             return WriteResponseAsync(context, Subsonic.ItemChoiceType.artistInfo2, artistInfo2);
         }
 
-        private static Task HandleGetAlbumInfoRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static Task HandleGetAlbumInfoRequestAsync(HttpContext context)
+        {
+            string id = GetRequiredStringParameterValue(context, "id");
+
+            if (!TryParseDirectoryAlbumId(id, out _) &&
+                !TryParseTrackId(id, out _))
+            {
+                throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
+            }
+
+            var albumInfo = new Subsonic.AlbumInfo
+            {
+                notes = null,
+                musicBrainzId = null,
+                lastFmUrl = null,
+                smallImageUrl = null,
+                mediumImageUrl = null,
+                largeImageUrl = null,
+            };
+
+            return WriteResponseAsync(context, Subsonic.ItemChoiceType.albumInfo, albumInfo);
+        }
 
         private static Task HandleGetAlbum2InfoRequestAsync(HttpContext context)
         {
@@ -562,7 +653,27 @@ namespace Hypersonic
             return WriteResponseAsync(context, Subsonic.ItemChoiceType.albumInfo, albumInfo);
         }
 
-        private static Task HandleGetSimilarSongsRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static Task HandleGetSimilarSongsRequestAsync(HttpContext context)
+        {
+            string id = GetRequiredStringParameterValue(context, "id");
+            int count = GetOptionalInt32ParameterValue(context, "count") ?? 50;
+
+            if (!TryParseArtistId(id, out _) &&
+                !TryParseAlbumId(id, out _) &&
+                !TryParseTrackId(id, out _))
+            {
+                throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
+            }
+
+            _ = count;
+
+            var similarSongs = new Subsonic.SimilarSongs
+            {
+                song = null,
+            };
+
+            return WriteResponseAsync(context, Subsonic.ItemChoiceType.similarSongs, similarSongs);
+        }
 
         private static Task HandleGetSimilarSongs2RequestAsync(HttpContext context)
         {
@@ -600,7 +711,91 @@ namespace Hypersonic
 
         #region Album/song list
 
-        private static Task HandleGetAlbumListRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static async Task HandleGetAlbumListRequestAsync(HttpContext context)
+        {
+            int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
+            string type = GetRequiredStringParameterValue(context, "type");
+            int size = GetOptionalInt32ParameterValue(context, "size") ?? 10;
+            if (size < 1 || size > 500)
+                throw RestApiErrorException.GenericError("Invalid value for 'size'.");
+            int offset = GetOptionalInt32ParameterValue(context, "offset") ?? 0;
+            if (offset < 0)
+                throw RestApiErrorException.GenericError("Invalid value for 'offset'.");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+            int apiUserId = apiContext.User.UserId;
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            Subsonic.AlbumList2 albumList2;
+
+            switch (type)
+            {
+                case "random":
+                {
+                    albumList2 = await RestApiQueries.GetAlbumList2RandomAsync(dbContext, apiUserId, musicFolderId, size, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                case "newest":
+                {
+                    albumList2 = await RestApiQueries.GetAlbumList2NewestAsync(dbContext, apiUserId, musicFolderId, offset, size, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                case "highest":
+                {
+                    // Ratings are not implemented.
+                    goto case "alphabeticalByArtist";
+                }
+                case "frequent":
+                {
+                    // Scrobbling is not implemented.
+                    goto case "alphabeticalByArtist";
+                }
+                case "recent":
+                {
+                    // Scrobbling is not implemented.
+                    goto case "alphabeticalByArtist";
+                }
+                case "alphabeticalByName":
+                {
+                    albumList2 = await RestApiQueries.GetAlbumList2OrderedByAlbumTitleAsync(dbContext, apiUserId, musicFolderId, offset, size, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                case "alphabeticalByArtist":
+                {
+                    albumList2 = await RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, apiUserId, musicFolderId, offset, size, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                case "starred":
+                {
+                    albumList2 = await RestApiQueries.GetAlbumList2StarredAsync(dbContext, apiUserId, musicFolderId, offset, size, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                case "byYear":
+                {
+                    int fromYear = GetRequiredInt32ParameterValue(context, "fromYear");
+                    int toYear = GetRequiredInt32ParameterValue(context, "toYear");
+
+                    albumList2 = await RestApiQueries.GetAlbumList2ByYearAsync(dbContext, apiUserId, musicFolderId, offset, size, fromYear, toYear, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                case "byGenre":
+                {
+                    string genre = GetRequiredStringParameterValue(context, "genre");
+
+                    albumList2 = await RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, apiUserId, musicFolderId, offset, size, genre, context.RequestAborted).ConfigureAwait(false);
+                    break;
+                }
+                default:
+                    throw RestApiErrorException.GenericError("Invalid value for 'type'.");
+            }
+
+            var albumList = new Subsonic.AlbumList()
+            {
+                album = albumList2.album.Select(CreateDirectoryChild).ToArray(),
+            };
+
+            await WriteResponseAsync(context, Subsonic.ItemChoiceType.albumList, albumList).ConfigureAwait(false);
+        }
 
         private static async Task HandleGetAlbumList2RequestAsync(HttpContext context)
         {
@@ -724,7 +919,25 @@ namespace Hypersonic
 
         private static Task HandleGetNowPlayingRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
 
-        private static Task HandleGetStarredRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static async Task HandleGetStarredRequestAsync(HttpContext context)
+        {
+            int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+            int apiUserId = apiContext.User.UserId;
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            Subsonic.Starred2 starred2 = await RestApiQueries.GetStarred2Async(dbContext, apiUserId, musicFolderId, context.RequestAborted).ConfigureAwait(false);
+
+            var starred = new Subsonic.Starred()
+            {
+                artist = starred2.artist.Select(CreateArtist).ToArray(),
+                album = starred2.album.Select(CreateDirectoryChild).ToArray(),
+                song = starred2.song.Select(CreateDirectoryChild).ToArray(),
+            };
+
+            await WriteResponseAsync(context, Subsonic.ItemChoiceType.starred, starred).ConfigureAwait(false);
+        }
 
         private static async Task HandleGetStarred2RequestAsync(HttpContext context)
         {
@@ -745,7 +958,44 @@ namespace Hypersonic
 
         private static Task HandleSearchRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
 
-        private static Task HandleSearch2RequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static async Task HandleSearch2RequestAsync(HttpContext context)
+        {
+            int? musicFolderId = GetOptionalInt32ParameterValue(context, "musicFolderId");
+            string query = GetRequiredStringParameterValue(context, "query");
+            int artistCount = GetOptionalInt32ParameterValue(context, "artistCount") ?? 20;
+            if (artistCount < 1 || artistCount > 500)
+                throw RestApiErrorException.GenericError("Invalid value for 'artistCount'.");
+            int artistOffset = GetOptionalInt32ParameterValue(context, "artistOffset") ?? 0;
+            if (artistOffset < 0)
+                throw RestApiErrorException.GenericError("Invalid value for 'artistOffset'.");
+            int albumCount = GetOptionalInt32ParameterValue(context, "albumCount") ?? 20;
+            if (albumCount < 1 || albumCount > 500)
+                throw RestApiErrorException.GenericError("Invalid value for 'albumCount'.");
+            int albumOffset = GetOptionalInt32ParameterValue(context, "albumOffset") ?? 0;
+            if (albumOffset < 0)
+                throw RestApiErrorException.GenericError("Invalid value for 'albumOffset'.");
+            int songCount = GetOptionalInt32ParameterValue(context, "songCount") ?? 20;
+            if (songCount < 1 || songCount > 500)
+                throw RestApiErrorException.GenericError("Invalid value for 'songCount'.");
+            int songOffset = GetOptionalInt32ParameterValue(context, "songOffset") ?? 0;
+            if (songOffset < 0)
+                throw RestApiErrorException.GenericError("Invalid value for 'songOffset'.");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+            int apiUserId = apiContext.User.UserId;
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            Subsonic.SearchResult3 searchResult3 = await RestApiQueries.GetSearch3ResultsAsync(dbContext, apiUserId, musicFolderId, query, artistOffset, artistCount, albumOffset, albumCount, songOffset, songCount, context.RequestAborted).ConfigureAwait(false);
+
+            var searchResult2 = new Subsonic.SearchResult2()
+            {
+                artist = searchResult3.artist.Select(CreateArtist).ToArray(),
+                album = searchResult3.album.Select(CreateDirectoryChild).ToArray(),
+                song = searchResult3.song.Select(CreateDirectoryChild).ToArray(),
+            };
+
+            await WriteResponseAsync(context, Subsonic.ItemChoiceType.searchResult2, searchResult2).ConfigureAwait(false);
+        }
 
         private static async Task HandleSearch3RequestAsync(HttpContext context)
         {
@@ -1166,20 +1416,26 @@ namespace Hypersonic
 
         private static async Task HandleStarRequestAsync(HttpContext context)
         {
+            var artistIds = new List<int>();
+            var albumIds = new List<int>();
             var trackIds = new List<int>();
 
             var values = context.Request.Query["id"];
             for (int i = 0; i < values.Count; ++i)
             {
                 int id;
-                if (TryParseTrackId(values[i], out id))
+                if (TryParseDirectoryArtistId(values[i], out int artistId))
+                    artistIds.Add(artistId);
+                else if (TryParseDirectoryAlbumId(values[i], out int albumId))
+                    albumIds.Add(albumId);
+                else if (TryParseTrackId(values[i], out id))
                     trackIds.Add(id);
                 else
                     throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
             }
 
-            int[] artistIds = GetArtistIdParameterValues(context, "artistId");
-            int[] albumIds = GetAlbumIdParameterValues(context, "albumId");
+            artistIds.AddRange(GetArtistIdParameterValues(context, "artistId"));
+            albumIds.AddRange(GetAlbumIdParameterValues(context, "albumId"));
 
             var apiContext = (ApiContext)context.Items[_apiContextKey];
             int apiUserId = apiContext.User.UserId;
@@ -1201,20 +1457,26 @@ namespace Hypersonic
 
         private static async Task HandleUnstarRequestAsync(HttpContext context)
         {
+            var artistIds = new List<int>();
+            var albumIds = new List<int>();
             var trackIds = new List<int>();
 
             var values = context.Request.Query["id"];
             for (int i = 0; i < values.Count; ++i)
             {
                 int id;
-                if (TryParseTrackId(values[i], out id))
+                if (TryParseDirectoryArtistId(values[i], out int artistId))
+                    artistIds.Add(artistId);
+                else if (TryParseDirectoryAlbumId(values[i], out int albumId))
+                    albumIds.Add(albumId);
+                else if (TryParseTrackId(values[i], out id))
                     trackIds.Add(id);
                 else
                     throw RestApiErrorException.GenericError($"Invalid value for 'id'.");
             }
 
-            int[] artistIds = GetArtistIdParameterValues(context, "artistId");
-            int[] albumIds = GetAlbumIdParameterValues(context, "albumId");
+            artistIds.AddRange(GetArtistIdParameterValues(context, "artistId"));
+            albumIds.AddRange(GetAlbumIdParameterValues(context, "albumId"));
 
             var apiContext = (ApiContext)context.Items[_apiContextKey];
             int apiUserId = apiContext.User.UserId;

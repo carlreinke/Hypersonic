@@ -375,5 +375,203 @@ namespace Hypersonic.Subsonic
             self.entry = entries;
             return self;
         }
+
+        internal static bool TryParseDirectoryArtistId(ReadOnlySpan<char> span, out int artistId)
+        {
+            if (!span.StartsWith("d", StringComparison.Ordinal))
+            {
+                artistId = default;
+                return false;
+            }
+
+            return TryParseArtistId(span.Slice(1), out artistId);
+        }
+
+        internal static bool TryParseDirectoryAlbumId(ReadOnlySpan<char> span, out int albumId)
+        {
+            if (!span.StartsWith("d", StringComparison.Ordinal))
+            {
+                albumId = default;
+                return false;
+            }
+
+            return TryParseAlbumId(span.Slice(1), out albumId);
+        }
+
+        internal static Indexes CreateIndexes(ArtistsID3 artists)
+        {
+            return new Indexes()
+            {
+                ignoredArticles = artists.ignoredArticles,
+                index = artists.index
+                    .Select(index => new Index()
+                    {
+                        name = index.name,
+                        artist = index.artist.Select(CreateArtist).ToArray(),
+                    })
+                    .ToArray(),
+            };
+        }
+
+        internal static Artist CreateArtist(ArtistID3 artist)
+        {
+            return new Artist()
+            {
+                id = "d" + artist.id,
+                name = artist.name,
+                starred = artist.starred,
+                starredSpecified = artist.starredSpecified,
+                userRating = default,
+                userRatingSpecified = false,
+                averageRating = default,
+                averageRatingSpecified = false,
+            };
+        }
+
+        internal static Directory CreateDirectory(ArtistWithAlbumsID3 artist)
+        {
+            return new Directory()
+            {
+                id = "d" + artist.id,
+                parent = null,
+                name = artist.name,
+                starred = artist.starred,
+                starredSpecified = artist.starredSpecified,
+                userRating = default,
+                userRatingSpecified = false,
+                averageRating = default,
+                averageRatingSpecified = false,
+                playCount = default,
+                playCountSpecified = false,
+                child = artist.album.Select(CreateDirectoryChild).ToArray(),
+            };
+        }
+
+        internal static Directory CreateDirectory(AlbumWithSongsID3 album)
+        {
+            return new Directory()
+            {
+                id = "d" + album.id,
+                parent = null,
+                name = album.name,
+                starred = album.starred,
+                starredSpecified = album.starredSpecified,
+                userRating = default,
+                userRatingSpecified = false,
+                averageRating = default,
+                averageRatingSpecified = false,
+                playCount = default,
+                playCountSpecified = false,
+                child = album.song.Select(CreateDirectoryChild).ToArray(),
+            };
+        }
+
+        internal static Child CreateDirectoryChild(AlbumID3 album)
+        {
+            return new Child()
+            {
+                id = "d" + album.id,
+                parent = "d" + album.artistId,
+                isDir = true,
+                title = album.name,
+                album = null,
+                artist = album.artist,
+                track = default,
+                trackSpecified = false,
+                year = album.year,
+                yearSpecified = album.yearSpecified,
+                genre = album.genre,
+                coverArt = album.coverArt,
+                size = default,
+                sizeSpecified = false,
+                contentType = null,
+                suffix = null,
+                transcodedContentType = null,
+                transcodedSuffix = null,
+                duration = album.duration,
+                durationSpecified = true,
+                bitRate = default,
+                bitRateSpecified = false,
+                path = null,
+                isVideo = default,
+                isVideoSpecified = false,
+                userRating = default,
+                userRatingSpecified = false,
+                averageRating = default,
+                averageRatingSpecified = false,
+                playCount = default,
+                playCountSpecified = false,
+                discNumber = default,
+                discNumberSpecified = false,
+                created = default,
+                createdSpecified = false,
+                starred = album.starred,
+                starredSpecified = album.starredSpecified,
+                albumId = album.id,
+                artistId = album.artistId,
+                type = default,
+                typeSpecified = false,
+                bookmarkPosition = default,
+                bookmarkPositionSpecified = false,
+                originalWidth = default,
+                originalWidthSpecified = false,
+                originalHeight = default,
+                originalHeightSpecified = false,
+            };
+        }
+
+        internal static Child CreateDirectoryChild(Child song)
+        {
+            return new Child()
+            {
+                id = song.id,
+                parent = "d" + song.artistId,
+                isDir = song.isDir,
+                title = song.title,
+                album = song.album,
+                artist = song.artist,
+                track = song.track,
+                trackSpecified = song.trackSpecified,
+                year = song.year,
+                yearSpecified = song.yearSpecified,
+                genre = song.genre,
+                coverArt = song.coverArt,
+                size = song.size,
+                sizeSpecified = song.sizeSpecified,
+                contentType = song.contentType,
+                suffix = song.suffix,
+                transcodedContentType = song.transcodedContentType,
+                transcodedSuffix = song.transcodedSuffix,
+                duration = song.duration,
+                durationSpecified = song.durationSpecified,
+                bitRate = song.bitRate,
+                bitRateSpecified = song.bitRateSpecified,
+                path = song.path,
+                isVideo = song.isVideo,
+                isVideoSpecified = song.isVideoSpecified,
+                userRating = song.userRating,
+                userRatingSpecified = song.userRatingSpecified,
+                averageRating = song.averageRating,
+                averageRatingSpecified = song.averageRatingSpecified,
+                playCount = song.playCount,
+                playCountSpecified = song.playCountSpecified,
+                discNumber = song.discNumber,
+                discNumberSpecified = song.discNumberSpecified,
+                created = song.created,
+                createdSpecified = song.createdSpecified,
+                starred = song.starred,
+                starredSpecified = song.starredSpecified,
+                albumId = song.albumId,
+                artistId = song.artistId,
+                type = song.type,
+                typeSpecified = song.typeSpecified,
+                bookmarkPosition = song.bookmarkPosition,
+                bookmarkPositionSpecified = song.bookmarkPositionSpecified,
+                originalWidth = song.originalWidth,
+                originalWidthSpecified = song.originalWidthSpecified,
+                originalHeight = song.originalHeight,
+                originalHeightSpecified = song.originalHeightSpecified,
+            };
+        }
     }
 }
