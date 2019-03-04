@@ -1082,13 +1082,11 @@ namespace Hypersonic
                 if (name == null)
                     throw RestApiErrorException.RequiredParameterMissingError("name");
 
-                Playlist newPlaylist = await RestApiQueries.CreatePlaylistAsync(dbContext, apiUserId, name, context.RequestAborted).ConfigureAwait(false);
+                playlistId = await RestApiQueries.CreatePlaylistAsync(dbContext, apiUserId, name, context.RequestAborted).ConfigureAwait(false);
 
-                await RestApiQueries.SetPlaylistSongsAsync(dbContext, apiUserId, newPlaylist.PlaylistId, songIds, context.RequestAborted).ConfigureAwait(false);
+                await RestApiQueries.SetPlaylistSongsAsync(dbContext, apiUserId, playlistId.Value, songIds, context.RequestAborted).ConfigureAwait(false);
 
                 await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
-
-                playlistId = newPlaylist.PlaylistId;
             }
             else
             {
@@ -1506,13 +1504,13 @@ namespace Hypersonic
 
         private static async Task HandleJukeboxControlRequestAsync(HttpContext context)
         {
+            string action = GetRequiredStringParameterValue(context, "action");
+
             var apiContext = (ApiContext)context.Items[_apiContextKey];
             int apiUserId = apiContext.User.UserId;
 
             if (!apiContext.User.CanJukebox)
                 throw RestApiErrorException.UserNotAuthorizedError();
-
-            string action = GetRequiredStringParameterValue(context, "action");
 
             var jukeboxService = context.RequestServices.GetRequiredService<JukeboxService>();
 
@@ -1642,9 +1640,9 @@ namespace Hypersonic
 
         private static async Task HandleGetUserRequestAsync(HttpContext context)
         {
-            var apiContext = (ApiContext)context.Items[_apiContextKey];
-
             string username = GetRequiredStringParameterValue(context, "username");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
 
             if (!apiContext.User.IsAdmin && username != apiContext.User.Name)
                 throw RestApiErrorException.UserNotAuthorizedError();
@@ -1670,25 +1668,140 @@ namespace Hypersonic
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.users, users).ConfigureAwait(false);
         }
 
-        private static Task HandleCreateUserRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static async Task HandleCreateUserRequestAsync(HttpContext context)
+        {
+            string username = GetRequiredStringParameterValue(context, "username");
+            string password = GetRequiredStringParameterValue(context, "password");
+            string email = GetRequiredStringParameterValue(context, "email");
+            bool ldapAuthenticated = GetOptionalBooleanParameterValue(context, "ldapAuthenticated") ?? false;
+            bool adminRole = GetOptionalBooleanParameterValue(context, "adminRole") ?? false;
+            bool settingsRole = GetOptionalBooleanParameterValue(context, "settingsRole") ?? true;
+            bool streamRole = GetOptionalBooleanParameterValue(context, "streamRole") ?? true;
+            bool jukeboxRole = GetOptionalBooleanParameterValue(context, "jukeboxRole") ?? false;
+            bool downloadRole = GetOptionalBooleanParameterValue(context, "downloadRole") ?? false;
+            bool uploadRole = GetOptionalBooleanParameterValue(context, "uploadRole") ?? false;
+            bool playlistRole = GetOptionalBooleanParameterValue(context, "playlistRole") ?? false;
+            bool coverArtRole = GetOptionalBooleanParameterValue(context, "coverArtRole") ?? false;
+            bool commentRole = GetOptionalBooleanParameterValue(context, "commentRole") ?? false;
+            bool podcastRole = GetOptionalBooleanParameterValue(context, "podcastRole") ?? false;
+            bool shareRole = GetOptionalBooleanParameterValue(context, "shareRole") ?? false;
+            bool videoConversionRole = GetOptionalBooleanParameterValue(context, "videoConversionRole") ?? false;
+            int[] musicFolderId = GetInt32ParameterValues(context, "musicFolderId");
 
-        private static Task HandleUpdateUserRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
 
-        private static Task HandleDeleteUserRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+            if (!apiContext.User.IsAdmin)
+                throw RestApiErrorException.UserNotAuthorizedError();
+
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            _ = email;
+            _ = ldapAuthenticated;
+            _ = streamRole;
+            _ = jukeboxRole;
+            _ = downloadRole;
+            _ = uploadRole;
+            _ = playlistRole;
+            _ = coverArtRole;
+            _ = commentRole;
+            _ = podcastRole;
+            _ = shareRole;
+            _ = videoConversionRole;
+
+            int userId = await RestApiQueries.CreateUserAsync(dbContext, username, password, isAdmin: adminRole, isGuest: !settingsRole, canJukebox: jukeboxRole, context.RequestAborted).ConfigureAwait(false);
+
+            if (musicFolderId.Length > 0)
+                await RestApiQueries.SetUserLibrariesAsync(dbContext, userId, musicFolderId, context.RequestAborted).ConfigureAwait(false);
+            else
+                await RestApiQueries.SetAllUserLibrariesAsync(dbContext, userId, context.RequestAborted).ConfigureAwait(false);
+
+            await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
+
+            await WriteResponseAsync(context, 0, null).ConfigureAwait(false);
+        }
+
+        private static async Task HandleUpdateUserRequestAsync(HttpContext context)
+        {
+            string username = GetRequiredStringParameterValue(context, "username");
+            string password = GetOptionalStringParameterValue(context, "password");
+            string email = GetOptionalStringParameterValue(context, "email");
+            bool? ldapAuthenticated = GetOptionalBooleanParameterValue(context, "ldapAuthenticated");
+            bool? adminRole = GetOptionalBooleanParameterValue(context, "adminRole");
+            bool? settingsRole = GetOptionalBooleanParameterValue(context, "settingsRole");
+            bool? streamRole = GetOptionalBooleanParameterValue(context, "streamRole");
+            bool? jukeboxRole = GetOptionalBooleanParameterValue(context, "jukeboxRole");
+            bool? downloadRole = GetOptionalBooleanParameterValue(context, "downloadRole");
+            bool? uploadRole = GetOptionalBooleanParameterValue(context, "uploadRole");
+            bool? playlistRole = GetOptionalBooleanParameterValue(context, "playlistRole");
+            bool? coverArtRole = GetOptionalBooleanParameterValue(context, "coverArtRole");
+            bool? commentRole = GetOptionalBooleanParameterValue(context, "commentRole");
+            bool? podcastRole = GetOptionalBooleanParameterValue(context, "podcastRole");
+            bool? shareRole = GetOptionalBooleanParameterValue(context, "shareRole");
+            bool? videoConversionRole = GetOptionalBooleanParameterValue(context, "videoConversionRole");
+            int[] musicFolderId = GetInt32ParameterValues(context, "musicFolderId");
+            int? maxBitRate = GetOptionalInt32ParameterValue(context, "maxBitRate");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+
+            if (!apiContext.User.IsAdmin)
+                throw RestApiErrorException.UserNotAuthorizedError();
+
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            _ = email;
+            _ = ldapAuthenticated;
+            _ = streamRole;
+            _ = jukeboxRole;
+            _ = downloadRole;
+            _ = uploadRole;
+            _ = playlistRole;
+            _ = coverArtRole;
+            _ = commentRole;
+            _ = podcastRole;
+            _ = shareRole;
+            _ = videoConversionRole;
+
+            int userId = await RestApiQueries.UpdateUserAsync(dbContext, username, password, maxBitRate, isAdmin: adminRole, isGuest: !settingsRole, canJukebox: jukeboxRole, context.RequestAborted).ConfigureAwait(false);
+
+            if (musicFolderId.Length > 0)
+                await RestApiQueries.SetUserLibrariesAsync(dbContext, userId, musicFolderId, context.RequestAborted).ConfigureAwait(false);
+
+            await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
+
+            await WriteResponseAsync(context, 0, null).ConfigureAwait(false);
+        }
+
+        private static async Task HandleDeleteUserRequestAsync(HttpContext context)
+        {
+            string username = GetRequiredStringParameterValue(context, "username");
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+
+            if (!apiContext.User.IsAdmin)
+                throw RestApiErrorException.UserNotAuthorizedError();
+
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            await RestApiQueries.DeleteUserAsync(dbContext, username, context.RequestAborted).ConfigureAwait(false);
+
+            await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
+
+            await WriteResponseAsync(context, 0, null).ConfigureAwait(false);
+        }
 
         private static async Task HandleChangePassword(HttpContext context)
         {
-            var apiContext = (ApiContext)context.Items[_apiContextKey];
-
             string username = GetRequiredStringParameterValue(context, "username");
             string password = HexDecodePassword(GetRequiredStringParameterValue(context, "password"));
+
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
 
             if (!apiContext.User.IsAdmin && username != apiContext.User.Name)
                 throw RestApiErrorException.UserNotAuthorizedError();
 
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            await RestApiQueries.SetUserPasswordAsync(dbContext, username, password, context.RequestAborted).ConfigureAwait(false);
+            await RestApiQueries.UpdateUserAsync(dbContext, username, password, null, null, null, null, context.RequestAborted).ConfigureAwait(false);
 
             await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
 

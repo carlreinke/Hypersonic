@@ -1643,7 +1643,7 @@ namespace Hypersonic
             return playlist.SetSongs(tracks);
         }
 
-        internal static async Task<Playlist> CreatePlaylistAsync(MediaInfoContext dbContext, int apiUserId, string name, CancellationToken cancellationToken)
+        internal static async Task<int> CreatePlaylistAsync(MediaInfoContext dbContext, int apiUserId, string name, CancellationToken cancellationToken)
         {
             var playlist = new Playlist
             {
@@ -1656,7 +1656,7 @@ namespace Hypersonic
             };
             await dbContext.Playlists.AddAsync(playlist, cancellationToken).ConfigureAwait(false);
 
-            return playlist;
+            return playlist.PlaylistId;
         }
 
         internal static async Task RecreatePlaylistAsync(MediaInfoContext dbContext, int apiUserId, int playlistId, string name, CancellationToken cancellationToken)
@@ -1686,7 +1686,7 @@ namespace Hypersonic
                 // where playlist track is in requested playlist
                 .Where(pt => pt.PlaylistId == playlistId)
                 // remove each track from playlist
-                .ForEachAsync(pt => dbContext.Remove(pt)).ConfigureAwait(false);
+                .ForEachAsync(pt => dbContext.Remove(pt), cancellationToken).ConfigureAwait(false);
 
             if (!await CanAddTracksAsync(dbContext, apiUserId, songIds, cancellationToken).ConfigureAwait(false))
                 throw RestApiErrorException.DataNotFoundError();
@@ -1699,7 +1699,7 @@ namespace Hypersonic
                     TrackId = songIds[i],
                     Index = i,
                 };
-                await dbContext.PlaylistTracks.AddAsync(playlistTrack).ConfigureAwait(false);
+                await dbContext.PlaylistTracks.AddAsync(playlistTrack, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -1794,6 +1794,21 @@ namespace Hypersonic
                 throw RestApiErrorException.UserNotAuthorizedError();
 
             dbContext.Playlists.Remove(playlist);
+        }
+
+        internal static async Task<bool> CanAddTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, CancellationToken cancellationToken)
+        {
+            foreach (int trackId in trackIds)
+            {
+                IQueryable<Track> trackByIdQuery = GetTrackByIdQuery(dbContext, apiUserId, trackId);
+
+                bool trackExists = await trackByIdQuery
+                    .AnyAsync(cancellationToken).ConfigureAwait(false);
+                if (!trackExists)
+                    return false;
+            }
+
+            return true;
         }
 
         #endregion
@@ -1962,21 +1977,6 @@ namespace Hypersonic
 
         #region Jukebox
 
-        internal static async Task<bool> CanAddTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, CancellationToken cancellationToken)
-        {
-            foreach (int trackId in trackIds)
-            {
-                IQueryable<Track> trackByIdQuery = GetTrackByIdQuery(dbContext, apiUserId, trackId);
-
-                bool trackExists = await trackByIdQuery
-                    .AnyAsync(cancellationToken).ConfigureAwait(false);
-                if (!trackExists)
-                    return false;
-            }
-
-            return true;
-        }
-
         internal static async Task<Subsonic.Child[]> GetTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, CancellationToken cancellationToken)
         {
             IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
@@ -2045,7 +2045,6 @@ namespace Hypersonic
         internal static async Task<Subsonic.User> GetUserAsync(MediaInfoContext dbContext, string username, CancellationToken cancellationToken)
         {
             User user = await dbContext.Users
-                // where user is requested user
                 .Where(u => u.Name == username)
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             if (user == null)
@@ -2122,16 +2121,111 @@ namespace Hypersonic
             };
         }
 
-        internal static async Task SetUserPasswordAsync(MediaInfoContext dbContext, string username, string password, CancellationToken cancellationToken)
+        internal static async Task<int> CreateUserAsync(MediaInfoContext dbContext, string username, string password, bool isAdmin, bool isGuest, bool canJukebox, CancellationToken cancellationToken)
+        {
+            bool userExists = await dbContext.Users
+                .Where(u => u.Name == username)
+                .AnyAsync(cancellationToken).ConfigureAwait(false);
+            if (userExists)
+                throw RestApiErrorException.GenericError("User already exists.");
+
+            var user = new User
+            {
+                Name = username,
+                Password = password,
+                MaxBitRate = 128000,
+                IsAdmin = isAdmin,
+                IsGuest = isGuest,
+                CanJukebox = canJukebox,
+            };
+            await dbContext.Users.AddAsync(user, cancellationToken).ConfigureAwait(false);
+
+            return user.UserId;
+        }
+
+        internal static async Task<int> UpdateUserAsync(MediaInfoContext dbContext, string username, string password, int? maxBitRate, bool? isAdmin, bool? isGuest, bool? canJukebox, CancellationToken cancellationToken)
         {
             User user = await dbContext.Users
-                // where user is requested user
                 .Where(u => u.Name == username)
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             if (user == null)
                 throw RestApiErrorException.DataNotFoundError();
 
-            user.Password = password;
+            if (password != null)
+                user.Password = password;
+            if (maxBitRate.HasValue)
+                user.MaxBitRate = maxBitRate.Value;
+            if (isAdmin.HasValue)
+                user.IsAdmin = isAdmin.Value;
+            if (isGuest.HasValue)
+                user.IsGuest = isGuest.Value;
+            if (canJukebox.HasValue)
+                user.CanJukebox = canJukebox.Value;
+
+            return user.UserId;
+        }
+
+        internal static async Task SetAllUserLibrariesAsync(MediaInfoContext dbContext, int userId, CancellationToken cancellationToken)
+        {
+            IAsyncEnumerable<int> libraryIds = dbContext.Libraries
+                .Select(l => l.LibraryId)
+                .AsAsyncEnumerable();
+
+            await libraryIds.ForEachAwaitAsync(async libraryId =>
+            {
+                bool libraryUserExists = await dbContext.LibraryUsers
+                    .Where(lu => lu.LibraryId == libraryId && lu.UserId == userId)
+                    .AnyAsync(cancellationToken).ConfigureAwait(false);
+                if (!libraryUserExists)
+                {
+                    var libraryUser = new LibraryUser
+                    {
+                        LibraryId = libraryId,
+                        UserId = userId,
+                    };
+                    await dbContext.LibraryUsers.AddAsync(libraryUser, cancellationToken).ConfigureAwait(false);
+                }
+            }, cancellationToken).ConfigureAwait(false);
+        }
+
+        internal static async Task SetUserLibrariesAsync(MediaInfoContext dbContext, int userId, int[] libraryIds, CancellationToken cancellationToken)
+        {
+            await dbContext.LibraryUsers
+                .Where(lu => lu.UserId == userId && !libraryIds.Contains(lu.LibraryId))
+                .ForEachAsync(lu => dbContext.Remove(lu), cancellationToken).ConfigureAwait(false);
+
+            foreach (int libraryId in libraryIds)
+            {
+                bool libraryExists = await dbContext.Libraries
+                    .Where(l => l.LibraryId == libraryId)
+                    .AnyAsync(cancellationToken).ConfigureAwait(false);
+                if (!libraryExists)
+                    throw RestApiErrorException.DataNotFoundError();
+
+                bool libraryUserExists = await dbContext.LibraryUsers
+                    .Where(lu => lu.LibraryId == libraryId && lu.UserId == userId)
+                    .AnyAsync(cancellationToken).ConfigureAwait(false);
+                if (!libraryUserExists)
+                {
+                    var libraryUser = new LibraryUser
+                    {
+                        LibraryId = libraryId,
+                        UserId = userId,
+                    };
+                    await dbContext.LibraryUsers.AddAsync(libraryUser, cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        internal static async Task DeleteUserAsync(MediaInfoContext dbContext, string username, CancellationToken cancellationToken)
+        {
+            User user = await dbContext.Users
+                .Where(u => u.Name == username)
+                .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+            if (user == null)
+                throw RestApiErrorException.DataNotFoundError();
+
+            dbContext.Users.Remove(user);
         }
 
         #endregion

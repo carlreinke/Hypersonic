@@ -24,10 +24,10 @@ namespace Hypersonic.Tests
 {
     public static partial class RestApiQueriesTests
     {
-        public static class SetUserPasswordAsyncTests
+        public static class SetUserLibrariesAsyncTests
         {
             [Fact]
-            public static void TestSetUserPasswordAsync()
+            public static void TestSetUserLibrariesAsync()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -42,7 +42,9 @@ namespace Hypersonic.Tests
                     var library = random.AddLibrary();
                     dbContext.SaveChanges();
 
-                    RestApiQueries.SetUserPasswordAsync(dbContext, user.Name, "newPassword", CancellationToken.None).Wait();
+                    RestApiQueries.SetUserLibrariesAsync(dbContext, user.UserId, new[] { library.LibraryId }, CancellationToken.None).Wait();
+
+                    // TODO
                 }
             }
         }
