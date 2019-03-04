@@ -2060,6 +2060,7 @@ namespace Hypersonic
             return new Subsonic.User()
             {
                 username = username,
+                email = null,
                 scrobblingEnabled = false,
                 maxBitRate = user.MaxBitRate,
                 maxBitRateSpecified = true,
@@ -2067,7 +2068,7 @@ namespace Hypersonic
                 settingsRole = !user.IsGuest,
                 downloadRole = false,
                 uploadRole = false,
-                playlistRole = false,
+                playlistRole = true,
                 coverArtRole = false,
                 commentRole = false,
                 podcastRole = false,
@@ -2075,7 +2076,49 @@ namespace Hypersonic
                 jukeboxRole = user.CanJukebox,
                 shareRole = false,
                 videoConversionRole = false,
+                avatarLastChanged = default,
+                avatarLastChangedSpecified = false,
                 folder = libraryIds,
+            };
+        }
+
+        internal static async Task<Subsonic.Users> GetUsersAsync(MediaInfoContext dbContext, CancellationToken cancellationToken)
+        {
+            var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+
+            Subsonic.User[] users = await dbContext.Users
+                .GroupJoin(dbContext.LibraryUsers, u => u.UserId, lu => lu.UserId, (u, lus) => new Subsonic.User
+                {
+                    username = u.Name,
+                    email = null,
+                    scrobblingEnabled = false,
+                    maxBitRate = u.MaxBitRate,
+                    maxBitRateSpecified = true,
+                    adminRole = u.IsAdmin,
+                    settingsRole = !u.IsGuest,
+                    downloadRole = false,
+                    uploadRole = false,
+                    playlistRole = true,
+                    coverArtRole = false,
+                    commentRole = false,
+                    podcastRole = false,
+                    streamRole = true,
+                    jukeboxRole = u.CanJukebox,
+                    shareRole = false,
+                    videoConversionRole = false,
+                    avatarLastChanged = default,
+                    avatarLastChangedSpecified = false,
+                    folder = lus
+                        .Select(lu => lu.LibraryId)
+                        .ToArray(),
+                })
+                .AsAsyncEnumerable()
+                .OrderBy(u => u.username, comparer)
+                .ToArray(cancellationToken).ConfigureAwait(false);
+
+            return new Subsonic.Users()
+            {
+                user = users,
             };
         }
 

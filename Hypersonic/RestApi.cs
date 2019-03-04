@@ -1656,7 +1656,19 @@ namespace Hypersonic
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.user, user).ConfigureAwait(false);
         }
 
-        private static Task HandleGetUsersRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
+        private static async Task HandleGetUsersRequestAsync(HttpContext context)
+        {
+            var apiContext = (ApiContext)context.Items[_apiContextKey];
+
+            if (!apiContext.User.IsAdmin)
+                throw RestApiErrorException.UserNotAuthorizedError();
+
+            var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
+
+            Subsonic.Users users = await RestApiQueries.GetUsersAsync(dbContext, context.RequestAborted).ConfigureAwait(false);
+
+            await WriteResponseAsync(context, Subsonic.ItemChoiceType.users, users).ConfigureAwait(false);
+        }
 
         private static Task HandleCreateUserRequestAsync(HttpContext context) => throw RestApiErrorException.GenericError("Not implemented.");
 
