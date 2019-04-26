@@ -13,7 +13,7 @@ A music streaming server that provides a subset of the Subsonic API.
 
 ## Supported Clients
 
-To use Hypersonic, you will need a Subsonic client that supports tag-based browsing.  Some features of supported clients may not be supported.
+To use Hypersonic, you will need a Subsonic client.  Some features of supported clients may not be supported.
 
 * [Aurial] (web)
 * [DSub] (Android)
@@ -38,7 +38,7 @@ dotnet Hypersonic.dll user add guest --guest
 dotnet Hypersonic.dll serve --bind 0:4040 --bind [::]:4040
 ```
 
-The API server is now running on port 4040.  Configure your client of choice (being sure to enable tag-based browsing) and off you go.  Guest users can log in with any password.
+The API server is now running on port 4040.  Configure your client of choice and off you go.  Guest users can log in with any password.
 
 Music libraries are scanned when the server starts and every 24 hours thereafter.
 
