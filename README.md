@@ -1,6 +1,8 @@
 # Hypersonic
 A music streaming server that provides a subset of the Subsonic API.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/wijhgcm3dd32extk/branch/default?svg=true)](https://ci.appveyor.com/project/carlreinke/hypersonic/branch/default)
+
 ## Features
 
 * Tag-based browsing
@@ -31,9 +33,9 @@ On Linux, the ffmpeg package needs to be installed.  On Windows, the [ffmpeg] ex
 Add a music library, add a user, and start the server:
 
 ```
-dotnet run --project Hypersonic -- library add Music path/to/music/
-dotnet run --project Hypersonic -- user add guest --guest
-dotnet run --project Hypersonic -- serve --bind 0:4040 --bind [::]:4040
+dotnet Hypersonic.dll library add Music path/to/music/
+dotnet Hypersonic.dll user add guest --guest
+dotnet Hypersonic.dll serve --bind 0:4040 --bind [::]:4040
 ```
 
 The API server is now running on port 4040.  Configure your client of choice (being sure to enable tag-based browsing) and off you go.  Guest users can log in with any password.
