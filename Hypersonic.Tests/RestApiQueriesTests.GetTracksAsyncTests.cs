@@ -48,7 +48,7 @@ namespace Hypersonic.Tests
                     dbContext.SaveChanges();
 
                     var trackIds = new[] { track.TrackId };
-                    var result = RestApiQueries.GetTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).Result;
+                    var result = RestApiQueries.GetTracksAsync(dbContext, user.UserId, trackIds, "opus", CancellationToken.None).Result;
 
                     Assert.NotNull(result);
                     // TODO

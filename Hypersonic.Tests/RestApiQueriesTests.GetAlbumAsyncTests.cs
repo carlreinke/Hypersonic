@@ -47,7 +47,7 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(trackFile, artist, album);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, CancellationToken.None).Result;
+                    var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, "opus", CancellationToken.None).Result;
 
                     Assert.NotNull(result);
                     // TODO

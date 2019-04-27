@@ -51,7 +51,7 @@ namespace Hypersonic.Tests
                     var trackStar = random.AddTrackStar(track, user);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetStarred2Async(dbContext, user.UserId, null, CancellationToken.None).Result;
+                    var result = RestApiQueries.GetStarred2Async(dbContext, user.UserId, null, "opus", CancellationToken.None).Result;
 
                     Assert.NotNull(result);
                     // TODO

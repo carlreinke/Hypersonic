@@ -261,7 +261,7 @@ namespace Hypersonic
             return artist.SetAlbums(albums);
         }
 
-        internal static async Task<Subsonic.AlbumWithSongsID3> GetAlbumAsync(MediaInfoContext dbContext, int apiUserId, int albumId, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.AlbumWithSongsID3> GetAlbumAsync(MediaInfoContext dbContext, int apiUserId, int albumId, string transcodedSuffix, CancellationToken cancellationToken)
         {
             IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
 
@@ -329,7 +329,8 @@ namespace Hypersonic
                     e.Track.CoverPicture.StreamHash as long?,
                     e.Track.Genre.Name,
                     e.Track.Added,
-                    e.Starred))
+                    e.Starred,
+                    transcodedSuffix))
                 .ToArrayAsync(cancellationToken).ConfigureAwait(false);
             if (tracks.Length == 0)
                 throw RestApiErrorException.DataNotFoundError();
@@ -337,7 +338,7 @@ namespace Hypersonic
             return album.SetSongs(tracks);
         }
 
-        internal static async Task<Subsonic.Child> GetSongAsync(MediaInfoContext dbContext, int apiUserId, int trackId, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.Child> GetSongAsync(MediaInfoContext dbContext, int apiUserId, int trackId, string transcodedSuffix, CancellationToken cancellationToken)
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
@@ -376,7 +377,8 @@ namespace Hypersonic
                     e.Track.CoverPicture.StreamHash as long?,
                     e.Track.Genre.Name,
                     e.Track.Added,
-                    e.Starred))
+                    e.Starred,
+                    transcodedSuffix))
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
             if (track == null)
                 throw RestApiErrorException.DataNotFoundError();
@@ -1007,7 +1009,7 @@ namespace Hypersonic
             };
         }
 
-        internal static async Task<Subsonic.Songs> GetRandomSongsAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string genre, int? fromYear, int? toYear, int count, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.Songs> GetRandomSongsAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string genre, int? fromYear, int? toYear, int count, string transcodedSuffix, CancellationToken cancellationToken)
         {
             int? genreId = genre == null
                 ? null
@@ -1058,7 +1060,8 @@ namespace Hypersonic
                     e.Track.CoverPicture.StreamHash as long?,
                     e.Track.Genre.Name,
                     e.Track.Added,
-                    e.Starred))
+                    e.Starred,
+                    transcodedSuffix))
                 .ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
             return new Subsonic.Songs()
@@ -1067,7 +1070,7 @@ namespace Hypersonic
             };
         }
 
-        internal static async Task<Subsonic.Songs> GetSongsByGenreAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string genre, int offset, int count, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.Songs> GetSongsByGenreAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string genre, int offset, int count, string transcodedSuffix, CancellationToken cancellationToken)
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
@@ -1135,7 +1138,8 @@ namespace Hypersonic
                         e.Track.CoverPicture.StreamHash as long?,
                         e.Track.Genre.Name,
                         e.Track.Added,
-                        e.Starred)
+                        e.Starred,
+                        transcodedSuffix)
                 })
                 .AsAsyncEnumerable()
                 // order by track title using culture-aware comparison
@@ -1151,7 +1155,7 @@ namespace Hypersonic
             };
         }
 
-        internal static async Task<Subsonic.Starred2> GetStarred2Async(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.Starred2> GetStarred2Async(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string transcodedSuffix, CancellationToken cancellationToken)
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
@@ -1267,7 +1271,8 @@ namespace Hypersonic
                         e.Track.CoverPicture.StreamHash as long?,
                         e.Track.Genre.Name,
                         e.Track.Added,
-                        e.Starred)
+                        e.Starred,
+                        transcodedSuffix)
                 })
                 .AsAsyncEnumerable()
                 // order by track title using culture-aware comparison
@@ -1289,7 +1294,7 @@ namespace Hypersonic
 
         #region Searching
 
-        internal static async Task<Subsonic.SearchResult3> GetSearch3ResultsAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string query, int artistOffset, int artistCount, int albumOffset, int albumCount, int songOffset, int songCount, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.SearchResult3> GetSearch3ResultsAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, string query, int artistOffset, int artistCount, int albumOffset, int albumCount, int songOffset, int songCount, string transcodedSuffix, CancellationToken cancellationToken)
         {
             var positiveTerms = new List<string>();
             var negativeTerms = new List<string>();
@@ -1500,7 +1505,8 @@ namespace Hypersonic
                         e.Track.CoverPicture.StreamHash as long?,
                         e.Track.Genre.Name,
                         e.Track.Added,
-                        e.Starred))
+                        e.Starred,
+                        transcodedSuffix))
                     .ToArrayAsync(cancellationToken).ConfigureAwait(false);
             }
 
@@ -1577,7 +1583,7 @@ namespace Hypersonic
             };
         }
 
-        internal static async Task<Subsonic.PlaylistWithSongs> GetPlaylistAsync(MediaInfoContext dbContext, int apiUserId, int playlistId, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.PlaylistWithSongs> GetPlaylistAsync(MediaInfoContext dbContext, int apiUserId, int playlistId, string transcodedSuffix, CancellationToken cancellationToken)
         {
             IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId);
 
@@ -1637,7 +1643,8 @@ namespace Hypersonic
                     e.Track.CoverPicture.StreamHash as long?,
                     e.Track.Genre.Name,
                     e.Track.Added,
-                    e.Starred))
+                    e.Starred,
+                    transcodedSuffix))
                 .ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
             return playlist.SetSongs(tracks);
@@ -1977,7 +1984,7 @@ namespace Hypersonic
 
         #region Jukebox
 
-        internal static async Task<Subsonic.Child[]> GetTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, CancellationToken cancellationToken)
+        internal static async Task<Subsonic.Child[]> GetTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, string transcodedSuffix, CancellationToken cancellationToken)
         {
             IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
 
@@ -2020,7 +2027,8 @@ namespace Hypersonic
                     e.Track.CoverPicture.StreamHash as long?,
                     e.Track.Genre.Name,
                     e.Track.Added,
-                    e.Starred))
+                    e.Starred,
+                    transcodedSuffix))
                 .ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
             var entries = new Subsonic.Child[trackIds.Count];

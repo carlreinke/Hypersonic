@@ -49,7 +49,7 @@ namespace Hypersonic.Tests
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetPlaylistAsync(dbContext, user.UserId, playlist.PlaylistId, CancellationToken.None).Result;
+                    var result = RestApiQueries.GetPlaylistAsync(dbContext, user.UserId, playlist.PlaylistId, "opus", CancellationToken.None).Result;
 
                     Assert.NotNull(result);
                     // TODO

@@ -45,6 +45,8 @@ namespace Hypersonic
 
         private const int _apiMinorVersion = 16;
 
+        private static readonly object _suffixKey = new object();
+
         private static readonly object _pathExtensionKey = new object();
 
         private static readonly object _apiContextKey = new object();
@@ -63,6 +65,26 @@ namespace Hypersonic
 #endif
                 return serializer;
             });
+
+        internal static bool SmuggleRestApiSuffix(this HttpContext context, string path)
+        {
+            // Allow the user the specify the preferred transcoded suffix in the username field
+            // since the API doesn't allow for multiple suffixes and some clients only support
+            // certain codecs.
+            // The user will configure the client with a server like so: http://server:4040/.mp3
+            var pathString = new PathString(path);
+            foreach (string suffix in new[] { "mp3", "oga", "ogg", "opus" })
+            {
+                PathString remaining;
+                if (context.Request.Path.StartsWithSegments(new PathString("/." + suffix).Add(pathString), out remaining))
+                {
+                    context.Request.Path = pathString.Add(remaining);
+                    context.Items[_suffixKey] = suffix;
+                    return true;
+                }
+            }
+            return false;
+        }
 
         internal static async Task HandleRestApiRequestAsync(HttpContext context)
         {
@@ -333,6 +355,8 @@ namespace Hypersonic
 
             apiContext.User = user;
 
+            apiContext.Suffix = context.Items.TryGetValue(_suffixKey, out object suffix) ? (string)suffix : "opus";
+
             return apiContext;
         }
 
@@ -480,7 +504,7 @@ namespace Hypersonic
             }
             else if (TryParseDirectoryAlbumId(id, out int albumId))
             {
-                Subsonic.AlbumWithSongsID3 album = await RestApiQueries.GetAlbumAsync(dbContext, apiUserId, albumId, context.RequestAborted).ConfigureAwait(false);
+                Subsonic.AlbumWithSongsID3 album = await RestApiQueries.GetAlbumAsync(dbContext, apiUserId, albumId, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
                 Subsonic.Directory directory = CreateDirectory(album);
 
@@ -535,7 +559,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.AlbumWithSongsID3 album = await RestApiQueries.GetAlbumAsync(dbContext, apiUserId, id, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.AlbumWithSongsID3 album = await RestApiQueries.GetAlbumAsync(dbContext, apiUserId, id, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.album, album).ConfigureAwait(false);
         }
@@ -548,7 +572,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.Child song = await RestApiQueries.GetSongAsync(dbContext, apiUserId, id, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.Child song = await RestApiQueries.GetSongAsync(dbContext, apiUserId, id, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.song, song).ConfigureAwait(false);
         }
@@ -892,7 +916,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.Songs randomSongs = await RestApiQueries.GetRandomSongsAsync(dbContext, apiUserId, musicFolderId, genre, fromYear, toYear, size, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.Songs randomSongs = await RestApiQueries.GetRandomSongsAsync(dbContext, apiUserId, musicFolderId, genre, fromYear, toYear, size, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.randomSongs, randomSongs).ConfigureAwait(false);
         }
@@ -912,7 +936,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.Songs songsByGenre = await RestApiQueries.GetSongsByGenreAsync(dbContext, apiUserId, musicFolderId, genre, offset, count, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.Songs songsByGenre = await RestApiQueries.GetSongsByGenreAsync(dbContext, apiUserId, musicFolderId, genre, offset, count, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.songsByGenre, songsByGenre).ConfigureAwait(false);
         }
@@ -927,7 +951,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.Starred2 starred2 = await RestApiQueries.GetStarred2Async(dbContext, apiUserId, musicFolderId, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.Starred2 starred2 = await RestApiQueries.GetStarred2Async(dbContext, apiUserId, musicFolderId, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             var starred = new Subsonic.Starred()
             {
@@ -947,7 +971,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.Starred2 starred2 = await RestApiQueries.GetStarred2Async(dbContext, apiUserId, musicFolderId, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.Starred2 starred2 = await RestApiQueries.GetStarred2Async(dbContext, apiUserId, musicFolderId, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.starred2, starred2).ConfigureAwait(false);
         }
@@ -985,7 +1009,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.SearchResult3 searchResult3 = await RestApiQueries.GetSearch3ResultsAsync(dbContext, apiUserId, musicFolderId, query, artistOffset, artistCount, albumOffset, albumCount, songOffset, songCount, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.SearchResult3 searchResult3 = await RestApiQueries.GetSearch3ResultsAsync(dbContext, apiUserId, musicFolderId, query, artistOffset, artistCount, albumOffset, albumCount, songOffset, songCount, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             var searchResult2 = new Subsonic.SearchResult2()
             {
@@ -1024,7 +1048,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.SearchResult3 searchResult3 = await RestApiQueries.GetSearch3ResultsAsync(dbContext, apiUserId, musicFolderId, query, artistOffset, artistCount, albumOffset, albumCount, songOffset, songCount, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.SearchResult3 searchResult3 = await RestApiQueries.GetSearch3ResultsAsync(dbContext, apiUserId, musicFolderId, query, artistOffset, artistCount, albumOffset, albumCount, songOffset, songCount, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.searchResult3, searchResult3).ConfigureAwait(false);
         }
@@ -1062,7 +1086,7 @@ namespace Hypersonic
             int apiUserId = apiContext.User.UserId;
             var dbContext = context.RequestServices.GetRequiredService<MediaInfoContext>();
 
-            Subsonic.PlaylistWithSongs playlist = await RestApiQueries.GetPlaylistAsync(dbContext, apiUserId, id, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.PlaylistWithSongs playlist = await RestApiQueries.GetPlaylistAsync(dbContext, apiUserId, id, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.playlist, playlist).ConfigureAwait(false);
         }
@@ -1097,7 +1121,7 @@ namespace Hypersonic
                 await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
             }
 
-            Subsonic.PlaylistWithSongs playlist = await RestApiQueries.GetPlaylistAsync(dbContext, apiUserId, playlistId.Value, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.PlaylistWithSongs playlist = await RestApiQueries.GetPlaylistAsync(dbContext, apiUserId, playlistId.Value, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.playlist, playlist).ConfigureAwait(false);
         }
@@ -1125,7 +1149,7 @@ namespace Hypersonic
 
             await dbContext.SaveChangesAsync(context.RequestAborted).ConfigureAwait(false);
 
-            Subsonic.PlaylistWithSongs playlist = await RestApiQueries.GetPlaylistAsync(dbContext, apiUserId, playlistId, context.RequestAborted).ConfigureAwait(false);
+            Subsonic.PlaylistWithSongs playlist = await RestApiQueries.GetPlaylistAsync(dbContext, apiUserId, playlistId, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
             await WriteResponseAsync(context, Subsonic.ItemChoiceType.playlist, playlist).ConfigureAwait(false);
         }
@@ -1191,96 +1215,34 @@ namespace Hypersonic
             context.Response.SetLastModified(modifiedTime);
             context.Response.SetExpires(now);
 
+            format = format ?? apiContext.Suffix;
+
             maxBitRate *= 1000;
             maxBitRate = maxBitRate == 0 ? apiContext.User.MaxBitRate
                        : apiContext.User.MaxBitRate == 0 ? maxBitRate
                        : Math.Min(maxBitRate, apiContext.User.MaxBitRate);
 
-            float gain = track.AlbumGain ?? track.TrackGain ?? 0;
+            ArgumentList arguments;
 
             switch (format)
             {
-                case null:
-                    goto case "opus";
                 case "mp3":
                 {
-                    var arguments = new ArgumentList()
-                        .Add("-i").Add(filePath)
-                        .Add("-map_metadata").Add("-1")
-                        .Add("-map").Add(b => b.Append("0:").Append(track.StreamIndex.ToStringInvariant()));
-
-                    bool useTrackBitRate = track.CodecName == "mp3" && (maxBitRate == 0 || track.BitRate <= maxBitRate);
-                    if (useTrackBitRate && Math.Abs(gain) < 1)
-                    {
-                        arguments
-                            .Add("-c:a:0").Add("copy");
-                    }
-                    else
-                    {
-                        int bitRate = useTrackBitRate ? track.BitRate.Value
-                                    : maxBitRate != 0 ? maxBitRate
-                                    : 256000;
-
-                        arguments
-                            .Add("-c:a:0").Add("mp3")
-                            .Add("-b:a:0").Add(bitRate.ToStringInvariant())
-                            .Add("-filter:a:0").Add(b => b
-                                .Append("volume=").Append(gain.ToStringInvariant()).Append("dB"));
-                    }
-
-                    arguments
-                        .Add("-f").Add("mp3")
-                        .Add("-");
-
-                    context.Response.ContentType = "audio/mpeg";
-
-                    using (var stream = FfmpegTranscoder.Transcode(arguments))
-                    {
-                        stream.InputStream.Close();
-
-                        await stream.CopyToAsync(context.Response.Body, context.RequestAborted).ConfigureAwait(false);
-                    }
+                    maxBitRate = maxBitRate == 0 ? 256_000 : Math.Min(Math.Max(32_000, maxBitRate), 320_000);
+                    arguments = MakeTranscoderArguments(track, filePath, maxBitRate, "mp3", "mp3", "mp3");
+                    break;
+                }
+                case "oga":
+                case "ogg":
+                {
+                    maxBitRate = maxBitRate == 0 ? 192_000 : Math.Min(Math.Max(45_000, maxBitRate), 500_000);
+                    arguments = MakeTranscoderArguments(track, filePath, maxBitRate, "vorbis", "libvorbis", "ogg");
                     break;
                 }
                 case "opus":
                 {
-                    var arguments = new ArgumentList()
-                        .Add("-i").Add(filePath)
-                        .Add("-map_metadata").Add("-1")
-                        .Add("-map").Add(b => b.Append("0:").Append(track.StreamIndex.ToStringInvariant()));
-
-                    bool useTrackBitRate = track.CodecName == "opus" && (maxBitRate == 0 || track.BitRate <= maxBitRate);
-                    if (useTrackBitRate && Math.Abs(gain) < 1)
-                    {
-                        arguments
-                            .Add("-c:a:0").Add("copy");
-                    }
-                    else
-                    {
-                        int bitRate = useTrackBitRate ? track.BitRate.Value
-                                    : maxBitRate != 0 ? maxBitRate
-                                    : 256000;
-
-                        arguments
-                            .Add("-c:a:0").Add("libopus")
-                            .Add("-b:a:0").Add(bitRate.ToStringInvariant())
-                            .Add("-filter:a:0").Add(b => b
-                                .Append("volume=").Append(gain.ToStringInvariant()).Append("dB"));
-                    }
-
-                    arguments
-                        .Add("-f").Add("opus")
-                        .Add("-");
-
-                    // https://wiki.xiph.org/index.php/MIMETypesCodecs
-                    context.Response.ContentType = "audio/ogg; codecs=opus";
-
-                    using (var stream = FfmpegTranscoder.Transcode(arguments))
-                    {
-                        stream.InputStream.Close();
-
-                        await stream.CopyToAsync(context.Response.Body, context.RequestAborted).ConfigureAwait(false);
-                    }
+                    maxBitRate = maxBitRate == 0 ? 128_000 : Math.Min(Math.Max(6_000, maxBitRate), 450_000);
+                    arguments = MakeTranscoderArguments(track, filePath, maxBitRate, "opus", "libopus", "ogg");
                     break;
                 }
                 case "raw":
@@ -1293,11 +1255,53 @@ namespace Hypersonic
 
                     // NOTE: This doesn't account for StreamIndex.
                     await context.Response.SendFileAsync(new PhysicalFileInfo(fileInfo), context.RequestAborted).ConfigureAwait(false);
-                    break;
+                    return;
                 }
                 default:
                     throw RestApiErrorException.GenericError("Specified value for 'format' is not supported.");
             }
+
+            context.Response.ContentType = GetContentTypeForSuffix(format);
+
+            using (var stream = FfmpegTranscoder.Transcode(arguments))
+            {
+                stream.InputStream.Close();
+
+                await stream.CopyToAsync(context.Response.Body, context.RequestAborted).ConfigureAwait(false);
+            }
+        }
+
+        private static ArgumentList MakeTranscoderArguments(RestApiQueries.TrackStreamInfo track, string filePath, int maxBitRate, string codecName, string ffmpegCodec, string ffmpegContainer)
+        {
+            float gain = track.AlbumGain ?? track.TrackGain ?? 0;
+
+            var arguments = new ArgumentList()
+                .Add("-i").Add(filePath)
+                .Add("-map_metadata").Add("-1")
+                .Add("-map").Add(b => b.Append("0:").Append(track.StreamIndex.ToStringInvariant()));
+
+            bool useTrackBitRate = track.CodecName == codecName && track.BitRate <= maxBitRate;
+            if (useTrackBitRate && Math.Abs(gain) < 1)
+            {
+                arguments
+                    .Add("-c:a:0").Add("copy");
+            }
+            else
+            {
+                int bitRate = useTrackBitRate ? track.BitRate.Value : maxBitRate;
+
+                arguments
+                    .Add("-c:a:0").Add(ffmpegCodec)
+                    .Add("-b:a:0").Add(bitRate.ToStringInvariant())
+                    .Add("-filter:a:0").Add(b => b
+                        .Append("volume=").Append(gain.ToStringInvariant()).Append("dB"));
+            }
+
+            arguments
+                .Add("-f").Add(ffmpegContainer)
+                .Add("-");
+
+            return arguments;
         }
 
         private static async Task HandleDownloadRequestAsync(HttpContext context)
@@ -1521,7 +1525,7 @@ namespace Hypersonic
                 int[] trackIds;
                 var jukeboxState = jukeboxService.GetState(out trackIds);
 
-                Subsonic.Child[] entries = await RestApiQueries.GetTracksAsync(dbContext, apiUserId, trackIds, context.RequestAborted).ConfigureAwait(false);
+                Subsonic.Child[] entries = await RestApiQueries.GetTracksAsync(dbContext, apiUserId, trackIds, apiContext.Suffix, context.RequestAborted).ConfigureAwait(false);
 
                 var jukeboxStatus = new Subsonic.JukeboxPlaylist()
                 {
@@ -2159,6 +2163,8 @@ namespace Hypersonic
             public string Client;
 
             public User User;
+
+            public string Suffix;
         }
     }
 }

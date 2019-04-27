@@ -14,12 +14,15 @@
 // You should have received a copy of the GNU General Public License along with this program.  If
 // not, see <https://www.gnu.org/licenses/>.
 //
+using System;
 using System.Globalization;
 
 namespace Hypersonic
 {
     internal static class InvariantCultureExtensions
     {
+        public static bool EqualsInvariant(this string s, string other) => s.Equals(other, StringComparison.InvariantCulture);
+
         public static string ToStringInvariant(this int value) => value.ToString(CultureInfo.InvariantCulture);
 
         public static string ToStringInvariant(this int value, string format) => value.ToString(format, CultureInfo.InvariantCulture);

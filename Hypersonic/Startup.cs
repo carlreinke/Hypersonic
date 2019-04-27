@@ -57,14 +57,20 @@ namespace Hypersonic
             });
 #endif
 
+            app.Use((context, next) =>
+            {
+                context.SmuggleRestApiSuffix("/rest");
+
+                return next();
+            });
+
             app.Map("/rest", a =>
             {
                 a.UseStatusCodePages();
 
+                a.UseExceptionHandler(HandleException);
 #if DEBUG
                 a.UseDeveloperExceptionPage();
-#else
-                a.UseExceptionHandler(HandleException);
 #endif
 
                 a.UsePathBase("/rest");
@@ -89,7 +95,6 @@ namespace Hypersonic
             }
         }
 
-#if !DEBUG
         private static void HandleException(IApplicationBuilder app)
         {
             app.Run(context =>
@@ -98,6 +103,5 @@ namespace Hypersonic
                 return Task.CompletedTask;
             });
         }
-#endif
     }
 }

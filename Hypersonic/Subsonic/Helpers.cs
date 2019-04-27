@@ -129,7 +129,8 @@ namespace Hypersonic.Subsonic
                 long? coverPictureHash,
                 string genreName,
                 DateTime added,
-                DateTime? starred
+                DateTime? starred,
+                string transcodedSuffix
             )
         {
             return new Child
@@ -150,8 +151,8 @@ namespace Hypersonic.Subsonic
                 sizeSpecified = true,
                 contentType = default,  // not populated
                 suffix = Path.GetExtension(fileName).TrimStart('.'),
-                transcodedContentType = "audio/ogg; codecs=opus",
-                transcodedSuffix = "opus",
+                transcodedContentType = GetContentTypeForSuffix(transcodedSuffix),
+                transcodedSuffix = transcodedSuffix,
                 duration = (int)Math.Round(trackDuration ?? 0),
                 durationSpecified = trackDuration.HasValue,
                 bitRate = (int)Math.Round(trackBitRate / 1e3 ?? 0),
@@ -572,6 +573,24 @@ namespace Hypersonic.Subsonic
                 originalHeight = song.originalHeight,
                 originalHeightSpecified = song.originalHeightSpecified,
             };
+        }
+
+        internal static string GetContentTypeForSuffix(string suffix)
+        {
+            switch (suffix)
+            {
+                case "mp3":
+                    return "audio/mpeg";
+                case "oga":
+                case "ogg":
+                    // https://wiki.xiph.org/index.php/MIMETypesCodecs
+                    return "audio/ogg; codecs=vorbis";
+                case "opus":
+                    // https://wiki.xiph.org/index.php/MIMETypesCodecs
+                    return "audio/ogg; codecs=opus";
+                default:
+                    throw new ArgumentException("Unexpected suffix.");
+            }
         }
     }
 }

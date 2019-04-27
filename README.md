@@ -6,7 +6,7 @@ A music streaming server that provides a subset of the Subsonic API.
 ## Features
 
 * Tag-based browsing
-* Transcoding to Opus (best quality) and MP3 (best compatibility)
+* Transcoding to Opus, Ogg Vorbis, or MP3
 * Server-applied ReplayGain
 * Playlists
 * Jukebox
