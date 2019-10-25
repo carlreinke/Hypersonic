@@ -29,36 +29,36 @@ namespace Hypersonic.Tests
         {
             [Fact]
             public static void TestGetArtistsAsync()
-        {
-            var dbConnection = OpenSqliteDatabase();
-
-            var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
-                .DisableClientSideEvaluation()
-                .UseSqlite(dbConnection);
-
-            using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
             {
-                var random = new RandomPopulator(dbContext);
-                var user = random.AddUser();
-                var library = random.AddLibrary();
-                var directory = random.AddDirectory(library);
-                var trackFile = random.AddFile(directory);
-                var artist = random.AddArtist();
-                artist.SortName = "artistSortName";
-                var album = random.AddAlbum(artist);
-                var track = random.AddTrack(trackFile, artist, album);
-                dbContext.SaveChanges();
+                var dbConnection = OpenSqliteDatabase();
 
-                var result = RestApiQueries.GetArtistsAsync(dbContext, user.UserId, null, CancellationToken.None).Result;
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
 
-                Assert.NotNull(result);
-                Assert.NotNull(result.index);
-                Assert.Single(result.index);
-                Assert.Equal(artist.SortName.Substring(0, 1).ToUpper(CultureInfo.CurrentCulture), result.index[0].name);
-                Assert.Single(result.index[0].artist);
-                // TODO
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var directory = random.AddDirectory(library);
+                    var trackFile = random.AddFile(directory);
+                    var artist = random.AddArtist();
+                    artist.SortName = "artistSortName";
+                    var album = random.AddAlbum(artist);
+                    var track = random.AddTrack(trackFile, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetArtistsAsync(dbContext, user.UserId, null, CancellationToken.None).Result;
+
+                    Assert.NotNull(result);
+                    Assert.NotNull(result.index);
+                    Assert.Single(result.index);
+                    Assert.Equal(artist.SortName.Substring(0, 1).ToUpper(CultureInfo.CurrentCulture), result.index[0].name);
+                    Assert.Single(result.index[0].artist);
+                    // TODO
+                }
             }
         }
     }
-}
 }
