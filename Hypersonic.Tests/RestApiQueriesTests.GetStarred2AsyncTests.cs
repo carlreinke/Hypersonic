@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -51,7 +51,7 @@ namespace Hypersonic.Tests
                     var trackStar = random.AddTrackStar(track, user);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetStarred2Async(dbContext, user.UserId, null, "opus", CancellationToken.None).Result;
+                    var result = RestApiQueries.GetStarred2Async(dbContext, user.UserId, null, "opus", CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.NotNull(result);
                     // TODO

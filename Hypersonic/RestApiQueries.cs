@@ -187,6 +187,8 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.ArtistWithAlbumsID3> GetArtistAsync(MediaInfoContext dbContext, int apiUserId, int artistId, CancellationToken cancellationToken)
         {
+            var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+
             IQueryable<ArtistStar> artistStarsQuery = GetArtistStarsQuery(dbContext, apiUserId);
 
             Subsonic.ArtistWithAlbumsID3 artist = await dbContext.Artists
@@ -242,27 +244,43 @@ namespace Hypersonic
                     e.TracksCount,
                     e.Duration,
                 })
-                // order by album date
-                .OrderBy(e => e.Album.Date)
-                .Select(e => CreateAlbumID3(
-                    e.Album.ArtistId,
-                    e.Album.Artist.Name,
+                .Select(e => new
+                {
                     e.Album.AlbumId,
-                    e.Album.Date / 10000,
-                    e.Album.Title,
-                    e.Album.CoverPicture.StreamHash as long?,
-                    e.Album.Genre.Name,
-                    e.Album.Added,
-                    e.Starred,
-                    e.TracksCount,
-                    e.Duration))
-                .ToArrayAsync(cancellationToken).ConfigureAwait(false);
+                    AlbumDate = e.Album.Date,
+                    AlbumSortTitle = e.Album.SortTitle ?? e.Album.Title,
+                    Item = CreateAlbumID3(
+                        e.Album.ArtistId,
+                        e.Album.Artist.Name,
+                        e.Album.AlbumId,
+                        e.Album.Date / 10000,
+                        e.Album.Title,
+                        e.Album.CoverPicture.StreamHash as long?,
+                        e.Album.Genre.Name,
+                        e.Album.Added,
+                        e.Starred,
+                        e.TracksCount,
+                        e.Duration)
+                })
+                .AsAsyncEnumerable()
+                // order by album date
+                .OrderBy(e => e.AlbumDate)
+                // then by album title using culture-aware comparison
+                .ThenBy(e => e.AlbumSortTitle, comparer)
+                // ensure stable ordering
+                .ThenBy(e => e.AlbumId)
+                .Select(e => e.Item)
+                .ToArray(cancellationToken).ConfigureAwait(false);
+            if (albums.Length == 0)
+                throw RestApiErrorException.DataNotFoundError();
 
             return artist.SetAlbums(albums);
         }
 
         internal static async Task<Subsonic.AlbumWithSongsID3> GetAlbumAsync(MediaInfoContext dbContext, int apiUserId, int albumId, string transcodedSuffix, CancellationToken cancellationToken)
         {
+            var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+
             IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
 
             Subsonic.AlbumWithSongsID3 album = await dbContext.Albums
@@ -309,29 +327,43 @@ namespace Hypersonic
                     e.Track,
                     Starred = s.Added as DateTime?,
                 })
-                // order by disc number then track number
-                .OrderBy(e => e.Track.DiscNumber ?? int.MaxValue)
-                .ThenBy(e => e.Track.TrackNumber ?? int.MaxValue)
-                .Select(e => CreateTrackChild(
-                    e.Track.File.Name,
-                    e.Track.File.Size,
-                    e.Track.ArtistId,
-                    e.Track.Artist.Name,
-                    e.Track.AlbumId,
-                    e.Track.Album.Title,
+                .Select(e => new
+                {
                     e.Track.TrackId,
-                    e.Track.BitRate,
-                    e.Track.Duration,
-                    e.Track.Date / 10000,
-                    e.Track.DiscNumber,
-                    e.Track.TrackNumber,
-                    e.Track.Title,
-                    e.Track.CoverPicture.StreamHash as long?,
-                    e.Track.Genre.Name,
-                    e.Track.Added,
-                    e.Starred,
-                    transcodedSuffix))
-                .ToArrayAsync(cancellationToken).ConfigureAwait(false);
+                    TrackDiscNumber = e.Track.DiscNumber,
+                    TrackTrackNumber = e.Track.TrackNumber,
+                    TrackSortTitle = e.Track.SortTitle ?? e.Track.Title,
+                    Item = CreateTrackChild(
+                        e.Track.File.Name,
+                        e.Track.File.Size,
+                        e.Track.ArtistId,
+                        e.Track.Artist.Name,
+                        e.Track.AlbumId,
+                        e.Track.Album.Title,
+                        e.Track.TrackId,
+                        e.Track.BitRate,
+                        e.Track.Duration,
+                        e.Track.Date / 10000,
+                        e.Track.DiscNumber,
+                        e.Track.TrackNumber,
+                        e.Track.Title,
+                        e.Track.CoverPicture.StreamHash as long?,
+                        e.Track.Genre.Name,
+                        e.Track.Added,
+                        e.Starred,
+                        transcodedSuffix)
+                })
+                .AsAsyncEnumerable()
+                // order by disc number
+                .OrderBy(e => e.TrackDiscNumber ?? int.MaxValue)
+                // then by track number
+                .ThenBy(e => e.TrackTrackNumber ?? int.MaxValue)
+                // then by track title using culture-aware comparison
+                .ThenBy(e => e.TrackSortTitle, comparer)
+                // ensure stable ordering
+                .ThenBy(e => e.TrackId)
+                .Select(e => e.Item)
+                .ToArray(cancellationToken).ConfigureAwait(false);
             if (tracks.Length == 0)
                 throw RestApiErrorException.DataNotFoundError();
 
@@ -441,6 +473,13 @@ namespace Hypersonic
                 .Take(count)
                 .ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
+            if (albums.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
+
             return new Subsonic.AlbumList2()
             {
                 album = albums,
@@ -501,6 +540,13 @@ namespace Hypersonic
                 .Take(count)
                 .ToArrayAsync(cancellationToken).ConfigureAwait(false);
 
+            if (albums.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
+
             return new Subsonic.AlbumList2()
             {
                 album = albums,
@@ -533,6 +579,13 @@ namespace Hypersonic
                 .Skip(offset)
                 .Take(count)
                 .ToArray(cancellationToken).ConfigureAwait(false);
+
+            if (albumIds.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
 
             IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
 
@@ -583,7 +636,7 @@ namespace Hypersonic
                 .AsAsyncEnumerable()
                 // order by album title using culture-aware comparison
                 .OrderBy(e => e.AlbumSortTitle, comparer)
-                // ensure stable ordering for pagination
+                // ensure stable ordering
                 .ThenBy(a => a.AlbumId)
                 .Select(e => e.Item)
                 .ToArray(cancellationToken).ConfigureAwait(false);
@@ -629,6 +682,13 @@ namespace Hypersonic
                 .Take(count)
                 .ToArray(cancellationToken).ConfigureAwait(false);
 
+            if (albumIds.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
+
             IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
 
             IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
@@ -680,11 +740,11 @@ namespace Hypersonic
                 .AsAsyncEnumerable()
                 // order by album artist name using culture-aware comparison
                 .OrderBy(e => e.AlbumArtistSortName, comparer)
-                // order by album date
+                // then by album date
                 .ThenBy(e => e.AlbumDate)
-                // order by album title using culture-aware comparison
+                // then by album title using culture-aware comparison
                 .ThenBy(e => e.AlbumSortTitle, comparer)
-                // ensure stable ordering for pagination
+                // ensure stable ordering
                 .ThenBy(a => a.AlbumId)
                 .Select(e => e.Item)
                 .ToArray(cancellationToken).ConfigureAwait(false);
@@ -724,6 +784,13 @@ namespace Hypersonic
                 .Skip(offset)
                 .Take(count)
                 .ToArray(cancellationToken).ConfigureAwait(false);
+
+            if (albumIds.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
 
             IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
 
@@ -768,7 +835,7 @@ namespace Hypersonic
                 .AsAsyncEnumerable()
                 // order by album title using culture-aware comparison
                 .OrderBy(e => e.AlbumSortTitle, comparer)
-                // ensure stable ordering for pagination
+                // ensure stable ordering
                 .ThenBy(e => e.AlbumId)
                 .Select(e => e.Item)
                 .ToArray(cancellationToken).ConfigureAwait(false);
@@ -807,7 +874,7 @@ namespace Hypersonic
                 albumIdsEnumerable = albumIdsEnumerable
                     // order by album date
                     .OrderBy(e => e.AlbumDate)
-                    // order by album title using culture-aware comparison
+                    // then by album title using culture-aware comparison
                     .ThenBy(e => e.AlbumSortTitle, comparer)
                     // ensure stable ordering for pagination
                     .ThenBy(e => e.AlbumId);
@@ -817,7 +884,7 @@ namespace Hypersonic
                 albumIdsEnumerable = albumIdsEnumerable
                     // order by album date
                     .OrderByDescending(e => e.AlbumDate)
-                    // order by album title using culture-aware comparison
+                    // then by album title using culture-aware comparison
                     .ThenByDescending(e => e.AlbumSortTitle, comparer)
                     // ensure stable ordering for pagination
                     .ThenByDescending(e => e.AlbumId);
@@ -829,6 +896,13 @@ namespace Hypersonic
                 .Skip(offset)
                 .Take(count)
                 .ToArray(cancellationToken).ConfigureAwait(false);
+
+            if (albumIds.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
 
             IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
 
@@ -884,9 +958,9 @@ namespace Hypersonic
                 albumsEnumerable = albumsEnumerable
                     // order by album date
                     .OrderBy(e => e.AlbumDate)
-                    // order by album title using culture-aware comparison
+                    // then by album title using culture-aware comparison
                     .ThenBy(e => e.AlbumSortTitle, comparer)
-                    // ensure stable ordering for pagination
+                    // ensure stable ordering
                     .ThenBy(a => a.AlbumId);
             }
             else
@@ -894,9 +968,9 @@ namespace Hypersonic
                 albumsEnumerable = albumsEnumerable
                     // order by album date
                     .OrderByDescending(e => e.AlbumDate)
-                    // order by album title using culture-aware comparison
+                    // then by album title using culture-aware comparison
                     .ThenByDescending(e => e.AlbumSortTitle, comparer)
-                    // ensure stable ordering for pagination
+                    // ensure stable ordering
                     .ThenByDescending(a => a.AlbumId);
             }
 
@@ -946,6 +1020,13 @@ namespace Hypersonic
                 .Skip(offset)
                 .Take(count)
                 .ToArray(cancellationToken).ConfigureAwait(false);
+
+            if (albumIds.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
 
             IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
 
@@ -998,7 +1079,7 @@ namespace Hypersonic
                 .AsAsyncEnumerable()
                 // order by album title using culture-aware comparison
                 .OrderBy(e => e.AlbumSortTitle, comparer)
-                // ensure stable ordering for pagination
+                // ensure stable ordering
                 .ThenBy(a => a.AlbumId)
                 .Select(e => e.Item)
                 .ToArray(cancellationToken).ConfigureAwait(false);
@@ -1663,7 +1744,7 @@ namespace Hypersonic
             };
             await dbContext.Playlists.AddAsync(playlist, cancellationToken).ConfigureAwait(false);
 
-            return playlist.PlaylistId;
+            return dbContext.Entry(playlist).Property(p => p.PlaylistId).CurrentValue;
         }
 
         internal static async Task RecreatePlaylistAsync(MediaInfoContext dbContext, int apiUserId, int playlistId, string name, CancellationToken cancellationToken)
@@ -1742,7 +1823,7 @@ namespace Hypersonic
                 .Where(pt => pt.PlaylistId == playlistId)
                 // get the maximum playlist track index
                 .OrderByDescending(pt => pt.Index)
-                .Select(pt => pt.Index)
+                .Select(pt => pt.Index as int?)
                 .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
             if (!await CanAddTracksAsync(dbContext, apiUserId, songIds, cancellationToken).ConfigureAwait(false))
@@ -2141,14 +2222,14 @@ namespace Hypersonic
             {
                 Name = username,
                 Password = password,
-                MaxBitRate = 128000,
+                MaxBitRate = 128_000,
                 IsAdmin = isAdmin,
                 IsGuest = isGuest,
                 CanJukebox = canJukebox,
             };
             await dbContext.Users.AddAsync(user, cancellationToken).ConfigureAwait(false);
 
-            return user.UserId;
+            return dbContext.Entry(user).Property(u => u.UserId).CurrentValue;
         }
 
         internal static async Task<int> UpdateUserAsync(MediaInfoContext dbContext, string username, string password, int? maxBitRate, bool? isAdmin, bool? isGuest, bool? canJukebox, CancellationToken cancellationToken)
@@ -2170,7 +2251,7 @@ namespace Hypersonic
             if (canJukebox.HasValue)
                 user.CanJukebox = canJukebox.Value;
 
-            return user.UserId;
+            return dbContext.Entry(user).Property(u => u.UserId).CurrentValue;
         }
 
         internal static async Task SetAllUserLibrariesAsync(MediaInfoContext dbContext, int userId, CancellationToken cancellationToken)

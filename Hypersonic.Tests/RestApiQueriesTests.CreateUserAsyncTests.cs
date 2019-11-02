@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -16,6 +16,7 @@
 //
 using Hypersonic.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using System.Threading;
 using Xunit;
 using static Hypersonic.Tests.Helpers;
@@ -27,7 +28,7 @@ namespace Hypersonic.Tests
         public static class CreateUserAsyncTests
         {
             [Fact]
-            public static void TestCreateUserAsync()
+            public static void CreateUserAsync_UsernameAlreadyExists_ThrowsGenericError()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -38,12 +39,55 @@ namespace Hypersonic.Tests
                 using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
                 {
                     var random = new RandomPopulator(dbContext);
-                    var library = random.AddLibrary();
+                    var user = random.AddUser();
                     dbContext.SaveChanges();
 
-                    int userId = RestApiQueries.CreateUserAsync(dbContext, "username", "password", false, false, false, CancellationToken.None).Result;
+                    var ex = Assert.Throws<RestApiErrorException>(() =>
+                    {
+                        return RestApiQueries.CreateUserAsync(dbContext, user.Name, "password", false, false, false, CancellationToken.None).GetAwaiter().GetResult();
+                    });
 
-                    // TODO
+                    var expectedException = RestApiErrorException.GenericError("User already exists.");
+                    Assert.Equal(expectedException.Message, ex.Message);
+                    Assert.Equal(expectedException.Code, ex.Code);
+                }
+            }
+
+            [Theory]
+            [InlineData(false, false, false)]
+            [InlineData(false, false, true)]
+            [InlineData(false, true, false)]
+            [InlineData(false, true, true)]
+            [InlineData(true, false, false)]
+            [InlineData(true, false, true)]
+            [InlineData(true, true, false)]
+            [InlineData(true, true, true)]
+            public static void CreateUserAsync_UsernameNotAlreadyExists_CreatesUser(bool isAdmin, bool isGuest, bool canJukebox)
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    const string username = "username";
+                    const string password = "password";
+
+                    int userId = RestApiQueries.CreateUserAsync(dbContext, username, password, isAdmin, isGuest, canJukebox, CancellationToken.None).GetAwaiter().GetResult();
+                    var users = dbContext.Users.Local.Where(u => u.UserId == userId).ToArray();
+                    dbContext.SaveChanges();
+
+                    var user = Assert.Single(users);
+                    Assert.Equal(username, user.Name);
+                    Assert.Equal(password, user.Password);
+                    Assert.Equal(128_000, user.MaxBitRate);
+                    Assert.Equal(isAdmin, user.IsAdmin);
+                    Assert.Equal(isGuest, user.IsGuest);
+                    Assert.Equal(canJukebox, user.CanJukebox);
+                    Assert.Empty(dbContext.LibraryUsers.Where(lu => lu.UserId == user.UserId));
+                    Assert.Empty(dbContext.Playlists.Where(p => p.UserId == user.UserId));
                 }
             }
         }

@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -16,6 +16,10 @@
 //
 using Hypersonic.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading;
 using Xunit;
 using static Hypersonic.Tests.Helpers;
@@ -26,8 +30,10 @@ namespace Hypersonic.Tests
     {
         public static class GetAlbumList2OrderedByArtistNameAsyncTests
         {
+            private static readonly StringComparer _stringComparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+
             [Fact]
-            public static void TestGetAlbumList2OrderedByArtistNameAsync()
+            public static void GetAlbumList2OrderedByArtistNameAsync_LibraryDoesNotExist_ThrowsDataNotFoundError()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -40,17 +46,521 @@ namespace Hypersonic.Tests
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
                     var library = random.AddLibrary();
-                    var directory = random.AddDirectory(library);
-                    var trackFile = random.AddFile(directory);
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
-                    var track = random.AddTrack(trackFile, artist, album);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).Result;
+                    var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, library.LibraryId + 1, 0, 10, CancellationToken.None).GetAwaiter().GetResult());
 
-                    Assert.NotNull(result);
-                    // TODO
+                    var expectedException = RestApiErrorException.DataNotFoundError();
+                    Assert.Equal(expectedException.Message, ex.Message);
+                    Assert.Equal(expectedException.Code, ex.Code);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_LibraryIsSpecified_ReturnsExpectedAlbums()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var otherLibrary = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    var otherDirectory = random.AddDirectory(otherLibrary);
+                    var otherFile = random.AddFile(otherDirectory);
+                    var otherTrack = random.AddTrack(otherFile, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, library.LibraryId, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal(1, resultAlbum.songCount);
+                    Assert.Equal(Math.Round(track.Duration ?? 0), resultAlbum.duration);
+                }
+            }
+
+            [Theory]
+            [InlineData(5, 10)]
+            [InlineData(10, 5)]
+            public static void GetAlbumList2OrderedByArtistNameAsync_VariousOffsetAndCount_ReturnsExpectedAlbumDetails(int albumCount, int count)
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var albums = new List<Album>();
+                    var tracks = new List<Track>();
+                    for (int i = 0; i < albumCount; ++i)
+                    {
+                        var album = random.AddAlbum(artist);
+                        albums.Add(album);
+                        var directory = random.AddDirectory(library);
+                        var file = random.AddFile(directory);
+                        var track = random.AddTrack(file, artist, album);
+                        tracks.Add(track);
+                    }
+                    dbContext.SaveChanges();
+
+                    albums = albums
+                        .OrderBy(a => a.Artist.SortName ?? a.Artist.Name, _stringComparer)
+                        .ThenBy(a => a.Date)
+                        .ThenBy(a => a.SortTitle ?? a.Title, _stringComparer)
+                        .ThenBy(a => a.AlbumId)
+                        .ToList();
+
+                    for (int i = 0; i <= albumCount; ++i)
+                    {
+                        var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, i, count, CancellationToken.None).GetAwaiter().GetResult();
+
+                        Assert.Equal(albums.Skip(i).Take(count).Select(a => "a" + a.AlbumId).ToArray(),
+                                     result.album.Select(a => a.id).ToArray());
+                        foreach (var resultAlbum in result.album)
+                        {
+                            var album = albums.Single(a => "a" + a.AlbumId == resultAlbum.id);
+                            var albumTracks = tracks.Where(t => t.Album == album);
+
+                            Assert.Equal(album.Title, resultAlbum.name);
+                            Assert.Equal(album.Artist.Name, resultAlbum.artist);
+                            Assert.Equal("r" + album.ArtistId, resultAlbum.artistId);
+                            Assert.Equal(album.CoverPictureId?.ToString("X8"), resultAlbum.coverArt);
+                            Assert.Equal(albumTracks.Count(), resultAlbum.songCount);
+                            Assert.Equal(Math.Round(albumTracks.Sum(t => t.Duration) ?? 0), resultAlbum.duration);
+                            Assert.False(resultAlbum.playCountSpecified);
+                            Assert.Equal(default, resultAlbum.playCount);
+                            Assert.Equal(album.Added, resultAlbum.created);
+                            Assert.False(resultAlbum.starredSpecified);
+                            Assert.Equal(default, resultAlbum.starred);
+                            Assert.Equal(album.Date.HasValue, resultAlbum.yearSpecified);
+                            Assert.Equal(album.Date / 1_00_00 ?? 0, resultAlbum.year);
+                            Assert.Equal(album.Genre?.Name, resultAlbum.genre);
+                        }
+                    }
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_NoAccessibleTrack_ReturnsNoAlbums()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: true);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var results = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Empty(results.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasNoAccessibleTrack_AlbumIsNotReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
+                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var artist = random.AddArtist();
+                    var accessibleAlbum = random.AddAlbum(artist);
+                    var accessibleDirectory = random.AddDirectory(accessibleLibrary);
+                    var accessibleFile = random.AddFile(accessibleDirectory);
+                    var accessibleTrack = random.AddTrack(accessibleFile, artist, accessibleAlbum);
+                    var nonAccessibleAlbum = random.AddAlbum(artist);
+                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
+                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
+                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, nonAccessibleAlbum);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + accessibleAlbum.AlbumId, resultAlbum.id);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasNonAccessibleTrack_TrackIsNotCounted()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
+                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var accessibleDirectory = random.AddDirectory(accessibleLibrary);
+                    var accessibleFile = random.AddFile(accessibleDirectory);
+                    var accessibleTrack = random.AddTrack(accessibleFile, artist, album);
+                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
+                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
+                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal(1, resultAlbum.songCount);
+                    Assert.Equal(Math.Round(accessibleTrack.Duration ?? 0), resultAlbum.duration);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasAccessibleAccessControlledTrack_AlbumIsReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: true);
+                    var libraryUser = random.AddLibraryUser(library, user);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Single(result.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasAccessibleNonAccessControlledTrack_AlbumIsReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: false);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Single(result.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasNoStar_StarredHasNoValue()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.False(resultAlbum.starredSpecified);
+                    Assert.Equal(default, resultAlbum.starred);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasStar_StarredHasExpectedValue()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var albumStar = random.AddAlbumStar(album, user);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.True(resultAlbum.starredSpecified);
+                    Assert.Equal(albumStar.Added, resultAlbum.starred);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasNoDate_YearIsNotReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    album.Date = null;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.False(resultAlbum.yearSpecified);
+                    Assert.Equal(default, resultAlbum.year);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasDate_YearIsReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    album.Date = 2000_01_02;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.True(resultAlbum.yearSpecified);
+                    Assert.Equal(album.Date / 1_00_00, resultAlbum.year);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasNoGenre_GenreIsNotReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var genre = random.AddGenre();
+                    var album = random.AddAlbum(artist, genre: null);
+                    album.Genre = null;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    var trackGenre = random.AddTrackGenre(track, genre);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Null(resultAlbum.genre);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasGenre_GenreIsReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var genre = random.AddGenre();
+                    var album = random.AddAlbum(artist, genre: genre);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    var trackGenre = random.AddTrackGenre(track, genre);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal(genre.Name, resultAlbum.genre);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_Always_AlbumsAreInExpectedOrder()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var albums = new List<Album>();
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        foreach (string sortTitle in new[]
+                            {
+                                "A",
+                                "a",
+                                "C",
+                                null,
+                                "B",
+                                "b",
+                            })
+                        {
+                            foreach (int? date in new int?[]
+                                {
+                                    1999_99_99,
+                                    2000_00_00,
+                                    2000_03_04,
+                                    null,
+                                    2000_01_02,
+                                })
+                            {
+                                foreach (string artistSortName in new[]
+                                    {
+                                        "A",
+                                        "a",
+                                        "C",
+                                        null,
+                                        "B",
+                                        "b",
+                                    })
+                                {
+                                    var artist = random.AddArtist();
+                                    artist.SortName = artistSortName;
+                                    var album = random.AddAlbum(artist);
+                                    album.Date = date;
+                                    album.SortTitle = sortTitle;
+                                    albums.Add(album);
+                                    var directory = random.AddDirectory(library);
+                                    var file = random.AddFile(directory);
+                                    var track = random.AddTrack(file, artist, album);
+                                }
+                            }
+                        }
+                    }
+                    dbContext.SaveChanges();
+
+                    albums = albums
+                        .OrderBy(a => a.Artist.SortName ?? a.Artist.Name, _stringComparer)
+                        .ThenBy(a => a.Date)
+                        .ThenBy(a => a.SortTitle ?? a.Title, _stringComparer)
+                        .ThenBy(a => a.AlbumId)
+                        .ToList();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, albums.Count, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Equal(albums.Select(a => "a" + a.AlbumId).ToArray(),
+                                 result.album.Select(a => a.id).ToArray());
                 }
             }
         }

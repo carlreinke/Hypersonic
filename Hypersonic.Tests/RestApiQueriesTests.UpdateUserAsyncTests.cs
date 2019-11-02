@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -42,7 +42,7 @@ namespace Hypersonic.Tests
                     var library = random.AddLibrary();
                     dbContext.SaveChanges();
 
-                    int userId = RestApiQueries.UpdateUserAsync(dbContext, user.Name, "newPassword", null, null, null, null, CancellationToken.None).Result;
+                    int userId = RestApiQueries.UpdateUserAsync(dbContext, user.Name, "newPassword", null, null, null, null, CancellationToken.None).GetAwaiter().GetResult();
 
                     // TODO
                 }

@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -51,7 +51,7 @@ namespace Hypersonic.Tests
 
                     for (int i = 0; i < 2; ++i)
                     {
-                        RestApiQueries.UnstarTrackAsync(dbContext, user.UserId, track.TrackId, CancellationToken.None).Wait();
+                        RestApiQueries.UnstarTrackAsync(dbContext, user.UserId, track.TrackId, CancellationToken.None).GetAwaiter().GetResult();
                         dbContext.SaveChanges();
 
                         Assert.False(dbContext.TrackStars.Any(s => s.TrackId == track.TrackId && s.UserId == user.UserId));

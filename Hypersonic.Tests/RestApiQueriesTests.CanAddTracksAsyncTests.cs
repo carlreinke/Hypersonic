@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -16,6 +16,7 @@
 //
 using Hypersonic.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Threading;
 using Xunit;
 using static Hypersonic.Tests.Helpers;
@@ -27,7 +28,142 @@ namespace Hypersonic.Tests
         public static class CanAddTracksAsyncTests
         {
             [Fact]
-            public static void TestCanAddTracksAsync()
+            public static void CanAddTracksAsync_Empty_ReturnsTrue()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    dbContext.SaveChanges();
+
+                    int[] trackIds = Array.Empty<int>();
+                    bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.True(result);
+                }
+            }
+
+            [Fact]
+            public static void CanAddTracksAsync_InvalidTrackId_ReturnsFalse()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: true);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    int[] trackIds = new int[] { track.TrackId, track.TrackId + 1 };
+                    bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.False(result);
+                }
+            }
+
+            [Fact]
+            public static void CanAddTracksAsync_NonAccessibleTrack_ReturnsFalse()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: true);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    int[] trackIds = new[] { track.TrackId };
+                    bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.False(result);
+                }
+            }
+
+            [Fact]
+            public static void CanAddTracksAsync_AccessibleAccessControlledTrack_ReturnsTrue()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: true);
+                    var libraryUser = random.AddLibraryUser(library, user);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    int[] trackIds = new[] { track.TrackId };
+                    bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.True(result);
+                }
+            }
+
+            [Fact]
+            public static void CanAddTracksAsync_AccessibleNonAccessControlledTrack_ReturnsTrue()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: false);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    int[] trackIds = new[] { track.TrackId };
+                    bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.True(result);
+                }
+            }
+
+            [Fact]
+            public static void CanAddTracksAsync_DuplicateTrack_ReturnsTrue()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -40,15 +176,15 @@ namespace Hypersonic.Tests
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
                     var library = random.AddLibrary();
-                    var directory = random.AddDirectory(library);
-                    var trackFile = random.AddFile(directory);
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
-                    var track = random.AddTrack(trackFile, artist, album);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
 
-                    var trackIds = new[] { track.TrackId };
-                    var result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).Result;
+                    int[] trackIds = new[] { track.TrackId, track.TrackId };
+                    bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.True(result);
                 }

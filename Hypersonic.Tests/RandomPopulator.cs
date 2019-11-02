@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -49,12 +49,12 @@ namespace Hypersonic.Tests
             return user;
         }
 
-        internal Library AddLibrary()
+        internal Library AddLibrary(bool accessControlled = false)
         {
             var library = new Library
             {
                 Name = RandomString(10),
-                IsAccessControlled = false,
+                IsAccessControlled = accessControlled,
                 ContentModified = RandomDateTime(),
             };
             _dbContext.Libraries.Add(library);
@@ -210,14 +210,14 @@ namespace Hypersonic.Tests
             return trackGenre;
         }
 
-        internal Playlist AddPlaylist(User user)
+        internal Playlist AddPlaylist(User user, bool @public = false)
         {
             var playlist = new Playlist
             {
                 User = user,
                 Name = RandomString(10),
                 Description = RandomString(10),
-                IsPublic = false,
+                IsPublic = @public,
                 Created = RandomDateTime(),
                 Modified = RandomDateTime(),
             };

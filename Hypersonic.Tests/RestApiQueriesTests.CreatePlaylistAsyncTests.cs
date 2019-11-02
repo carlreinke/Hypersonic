@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -16,6 +16,7 @@
 //
 using Hypersonic.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Linq;
 using System.Threading;
 using Xunit;
@@ -28,7 +29,7 @@ namespace Hypersonic.Tests
         public static class CreatePlaylistAsyncTests
         {
             [Fact]
-            public static void TestCreatePlaylistAsync()
+            public static void CreatePlaylistAsync_Always_CreatesPlaylist()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -40,18 +41,22 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var library = random.AddLibrary();
-                    var directory = random.AddDirectory(library);
-                    var trackFile = random.AddFile(directory);
-                    var artist = random.AddArtist();
-                    var album = random.AddAlbum(artist);
-                    var track = random.AddTrack(trackFile, artist, album);
                     dbContext.SaveChanges();
 
-                    RestApiQueries.CreatePlaylistAsync(dbContext, user.UserId, "playlistName", CancellationToken.None).Wait();
+                    const string playlistName = "playlistName";
+
+                    int playlistId = RestApiQueries.CreatePlaylistAsync(dbContext, user.UserId, playlistName, CancellationToken.None).GetAwaiter().GetResult();
+                    var playlists = dbContext.Playlists.Local.Where(p => p.PlaylistId == playlistId).ToArray();
                     dbContext.SaveChanges();
 
-                    Assert.True(dbContext.Playlists.Any(p => p.Name == "playlistName"));
+                    var playlist = Assert.Single(playlists);
+                    Assert.Equal(user.UserId, playlist.UserId);
+                    Assert.Equal(playlistName, playlist.Name);
+                    Assert.Null(playlist.Description);
+                    Assert.False(playlist.IsPublic);
+                    Assert.InRange(playlist.Created, DateTime.UtcNow - TimeSpan.FromSeconds(30), DateTime.UtcNow);
+                    Assert.InRange(playlist.Modified, playlist.Created, playlist.Created + TimeSpan.FromSeconds(1));
+                    Assert.Empty(dbContext.PlaylistTracks.Where(pt => pt.PlaylistId == playlist.PlaylistId));
                 }
             }
         }

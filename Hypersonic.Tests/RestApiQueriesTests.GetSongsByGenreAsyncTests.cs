@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -48,7 +48,7 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(trackFile, artist, album, genre: genre);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetSongsByGenreAsync(dbContext, user.UserId, null, track.Genre.Name, 0, 10, "opus", CancellationToken.None).Result;
+                    var result = RestApiQueries.GetSongsByGenreAsync(dbContext, user.UserId, null, track.Genre.Name, 0, 10, "opus", CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.NotNull(result);
                     // TODO

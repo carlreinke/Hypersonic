@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -47,7 +47,7 @@ namespace Hypersonic.Tests
 
                     for (int i = 0; i < 2; ++i)
                     {
-                        RestApiQueries.UnstarAlbumAsync(dbContext, user.UserId, album.AlbumId, CancellationToken.None).Wait();
+                        RestApiQueries.UnstarAlbumAsync(dbContext, user.UserId, album.AlbumId, CancellationToken.None).GetAwaiter().GetResult();
                         dbContext.SaveChanges();
 
                         Assert.False(dbContext.AlbumStars.Any(s => s.AlbumId == album.AlbumId && s.UserId == user.UserId));

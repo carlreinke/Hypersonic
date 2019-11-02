@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -25,6 +25,9 @@ namespace Hypersonic.Tests
 {
     public static partial class RestApiQueriesTests
     {
+        // No need for playlist existence or ownership tests because this
+        // method assumes they've already been checked.
+
         public static class RemovePlaylistSongsAsyncTests
         {
             [Fact]
@@ -52,7 +55,7 @@ namespace Hypersonic.Tests
                     var playlistTrack2 = random.AddPlaylistTrack(playlist, track2, 1);
                     dbContext.SaveChanges();
 
-                    RestApiQueries.RemovePlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, new[] { 0 }, CancellationToken.None).Wait();
+                    RestApiQueries.RemovePlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, new[] { 0 }, CancellationToken.None).GetAwaiter().GetResult();
                     dbContext.SaveChanges();
 
                     Assert.False(dbContext.PlaylistTracks.Any(pt => pt.PlaylistId == playlist.PlaylistId && pt.TrackId == track1.TrackId));

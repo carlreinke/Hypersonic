@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -42,7 +42,7 @@ namespace Hypersonic.Tests
                     var library = random.AddLibrary();
                     dbContext.SaveChanges();
 
-                    RestApiQueries.SetAllUserLibrariesAsync(dbContext, user.UserId, CancellationToken.None).Wait();
+                    RestApiQueries.SetAllUserLibrariesAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
 
                     // TODO
                 }

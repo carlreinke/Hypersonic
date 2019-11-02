@@ -68,9 +68,9 @@ namespace Hypersonic
 
         internal static bool SmuggleRestApiSuffix(this HttpContext context, string path)
         {
-            // Allow the user the specify the preferred transcoded suffix in the username field
-            // since the API doesn't allow for multiple suffixes and some clients only support
-            // certain codecs.
+            // Allow the user the specify the preferred transcoded suffix in the server URL since
+            // the API doesn't allow for multiple suffixes and some clients only support certain
+            // codecs.
             // The user will configure the client with a server like so: http://server:4040/.mp3
             var pathString = new PathString(path);
             foreach (string suffix in new[] { "mp3", "oga", "ogg", "opus" })

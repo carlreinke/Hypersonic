@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -45,7 +45,7 @@ namespace Hypersonic.Tests
                     var picture = random.AddPicture(trackFile);
                     dbContext.SaveChanges();
 
-                    var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).Result;
+                    var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.NotNull(result);
                     // TODO

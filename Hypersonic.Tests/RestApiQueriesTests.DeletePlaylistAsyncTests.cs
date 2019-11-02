@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -27,8 +27,121 @@ namespace Hypersonic.Tests
     {
         public static class DeletePlaylistAsyncTests
         {
+            [Theory]
+            [InlineData(false)]
+            [InlineData(true)]
+            public static void DeletePlaylistAsync_PlaylistDoesNotExist_ThrowsDataNotFoundError(bool canDeleteAllPublicPlaylists)
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var playlist = random.AddPlaylist(user);
+                    dbContext.SaveChanges();
+
+                    var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.DeletePlaylistAsync(dbContext, user.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId + 1, CancellationToken.None).GetAwaiter().GetResult());
+
+                    var expectedException = RestApiErrorException.DataNotFoundError();
+                    Assert.Equal(expectedException.Message, ex.Message);
+                    Assert.Equal(expectedException.Code, ex.Code);
+                }
+            }
+
+            [Theory]
+            [InlineData(false)]
+            [InlineData(true)]
+            public static void DeletePlaylistAsync_PrivatePlaylistOwnedByOtherUser_ThrowsDataNotFoundError(bool canDeleteAllPublicPlaylists)
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user1 = random.AddUser();
+                    var user2 = random.AddUser();
+                    var playlist = random.AddPlaylist(user1, @public: false);
+                    dbContext.SaveChanges();
+
+                    var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.DeletePlaylistAsync(dbContext, user2.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult());
+
+                    var expectedException = RestApiErrorException.DataNotFoundError();
+                    Assert.Equal(expectedException.Message, ex.Message);
+                    Assert.Equal(expectedException.Code, ex.Code);
+                }
+            }
+
             [Fact]
-            public static void TestDeletePlaylistAsync()
+            public static void DeletePlaylistAsync_PublicPlaylistOwnedByOtherUserAndNotCanDeleteAllPublicPlaylists_ThrowsUserNotAuthorizedError()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user1 = random.AddUser();
+                    var user2 = random.AddUser();
+                    var playlist = random.AddPlaylist(user1, @public: true);
+                    dbContext.SaveChanges();
+
+                    bool canDeleteAllPublicPlaylists = false;
+                    var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.DeletePlaylistAsync(dbContext, user2.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult());
+
+                    var expectedException = RestApiErrorException.UserNotAuthorizedError();
+                    Assert.Equal(expectedException.Message, ex.Message);
+                    Assert.Equal(expectedException.Code, ex.Code);
+                }
+            }
+
+            [Fact]
+            public static void DeletePlaylistAsync_PublicPlaylistOwnedByOtherUserAndCanDeleteAllPublicPlaylists_DeletesPlaylist()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user1 = random.AddUser();
+                    var user2 = random.AddUser();
+                    var library = random.AddLibrary();
+                    var directory = random.AddDirectory(library);
+                    var trackFile = random.AddFile(directory);
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var track = random.AddTrack(trackFile, artist, album);
+                    var playlist = random.AddPlaylist(user1, @public: true);
+                    var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
+                    dbContext.SaveChanges();
+
+                    bool canDeleteAllPublicPlaylists = true;
+                    RestApiQueries.DeletePlaylistAsync(dbContext, user2.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult();
+                    dbContext.SaveChanges();
+
+                    Assert.False(dbContext.Playlists.Any(p => p.PlaylistId == playlist.PlaylistId));
+                }
+            }
+
+            [Theory]
+            [InlineData(false)]
+            [InlineData(true)]
+            public static void DeletePlaylistAsync_PlaylistOwnedByUser_DeletesPlaylist(bool playlistIsPublic)
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -46,11 +159,12 @@ namespace Hypersonic.Tests
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
                     var track = random.AddTrack(trackFile, artist, album);
-                    var playlist = random.AddPlaylist(user);
+                    var playlist = random.AddPlaylist(user, playlistIsPublic);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
                     dbContext.SaveChanges();
 
-                    RestApiQueries.DeletePlaylistAsync(dbContext, user.UserId, user.IsAdmin, playlist.PlaylistId, CancellationToken.None).Wait();
+                    bool canDeleteAllPublicPlaylists = true;
+                    RestApiQueries.DeletePlaylistAsync(dbContext, user.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult();
                     dbContext.SaveChanges();
 
                     Assert.False(dbContext.Playlists.Any(p => p.PlaylistId == playlist.PlaylistId));
