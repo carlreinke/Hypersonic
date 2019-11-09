@@ -27,9 +27,10 @@ namespace Hypersonic.Ffmpeg
     {
         public static byte[] Hash(string filePath, int streamIndex, string hashAlgorithm = "sha256")
         {
-            using (var hashStream = CreateHashStream(filePath, streamIndex, hashAlgorithm))
+            using (var hashProcess = CreateHashProcess(filePath, streamIndex, hashAlgorithm))
+            using (var hashStream = hashProcess.OutputStream)
             {
-                hashStream.InputStream.Close();
+                hashProcess.InputStream.Close();
 
                 try
                 {
@@ -46,9 +47,11 @@ namespace Hypersonic.Ffmpeg
 
         public static Task<byte[]> HashAsync(string filePath, int streamIndex, string hashAlgorithm = "sha256", CancellationToken cancellationToken = default)
         {
-            using (var hashStream = CreateHashStream(filePath, streamIndex, hashAlgorithm))
+            using (var hashProcess = CreateHashProcess(filePath, streamIndex, hashAlgorithm))
+            using (cancellationToken.Register(hashProcess.Abort))
+            using (var hashStream = hashProcess.OutputStream)
             {
-                hashStream.InputStream.Close();
+                hashProcess.InputStream.Close();
 
                 try
                 {
@@ -63,7 +66,7 @@ namespace Hypersonic.Ffmpeg
             }
         }
 
-        private static FfmpegStream CreateHashStream(string filePath, int streamIndex, string hashAlgorithm)
+        private static FfmpegProcess CreateHashProcess(string filePath, int streamIndex, string hashAlgorithm)
         {
             if (hashAlgorithm == null)
                 throw new ArgumentNullException(nameof(hashAlgorithm));

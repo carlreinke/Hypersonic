@@ -1,5 +1,5 @@
 ﻿//
-// Copyright (C) 2018  Carl Reinke
+// Copyright (C) 2019  Carl Reinke
 //
 // This file is part of Hypersonic.
 //
@@ -21,16 +21,17 @@ using System.IO;
 
 namespace Hypersonic.Ffmpeg
 {
-    internal sealed class FfmpegStream : Stream
+    internal sealed class FfmpegProcess : IDisposable
     {
         private readonly Process _process;
         private readonly Stream _processInputStream;
         private readonly Stream _processOutputStream;
 
         private bool _disposed;
+        private bool _outputStreamAccessed;
         private bool _inputStreamAccessed;
 
-        public FfmpegStream(string executable, IEnumerable<string> arguments)
+        public FfmpegProcess(string executable, IEnumerable<string> arguments)
         {
             if (executable == null)
                 throw new ArgumentNullException(nameof(executable));
@@ -66,23 +67,9 @@ namespace Hypersonic.Ffmpeg
             _processOutputStream = _process.StandardOutput.BaseStream;
         }
 
-        ~FfmpegStream()
+        ~FfmpegProcess()
         {
             Dispose(false);
-        }
-
-        public override bool CanRead => _processOutputStream.CanRead;
-
-        public override bool CanSeek => _processOutputStream.CanSeek;
-
-        public override bool CanWrite => _processOutputStream.CanWrite;
-
-        public override long Length => _processOutputStream.Length;
-
-        public override long Position
-        {
-            get => _processOutputStream.Position;
-            set => _processOutputStream.Position = value;
         }
 
         public Stream InputStream
@@ -95,65 +82,76 @@ namespace Hypersonic.Ffmpeg
             }
         }
 
-        public override void Flush() => _processOutputStream.Flush();
+        public Stream OutputStream
+        {
+            get
+            {
+                _outputStreamAccessed = true;
 
-        public override int Read(byte[] buffer, int offset, int count) => _processOutputStream.Read(buffer, offset, count);
+                return _processOutputStream;
+            }
+        }
 
-        public override long Seek(long offset, SeekOrigin origin) => _processOutputStream.Seek(offset, origin);
+        public void Dispose()
+        {
+            Dispose(true);
 
-        public override void SetLength(long value) => _processOutputStream.SetLength(value);
+            GC.SuppressFinalize(this);
+        }
 
-        public override void Write(byte[] buffer, int offset, int count) => _processOutputStream.Write(buffer, offset, count);
+        public void Abort()
+        {
+            try
+            {
+                try
+                {
+                    if (!_process.HasExited)
+                        _process.CloseMainWindow();
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    // Don't care.
+                }
+                try
+                {
+                    _process.WaitForExit(1000);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Exception thrown while waiting for {0}: {1}", _process.StartInfo.FileName, ex);
+                }
+                try
+                {
+                    if (!_process.HasExited)
+                        _process.Kill();
+                }
+                catch (NotSupportedException)
+                {
+                    // Don't care.
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Process is already dead.
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception thrown while killing {0}: {1}", _process.StartInfo.FileName, ex);
+            }
+        }
 
-        protected override void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed)
                 return;
 
             if (_process != null)
-            {
-                try
-                {
-                    try
-                    {
-                        if (!_process.HasExited)
-                            _process.CloseMainWindow();
-                    }
-                    catch (PlatformNotSupportedException)
-                    {
-                        // Don't care.
-                    }
-                    try
-                    {
-                        _process.WaitForExit(1000);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Exception thrown while waiting for {0}: {1}", _process.StartInfo.FileName, ex);
-                    }
-                    try
-                    {
-                        if (!_process.HasExited)
-                            _process.Kill();
-                    }
-                    catch (NotSupportedException)
-                    {
-                        // Don't care.
-                    }
-                }
-                catch (InvalidOperationException)
-                {
-                    // Process is already dead.
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("Exception thrown while killing {0}: {1}", _process.StartInfo.FileName, ex);
-                }
-            }
+                Abort();
 
             if (disposing)
             {
-                _processOutputStream.Dispose();
+                if (!_outputStreamAccessed)
+                    _processOutputStream.Dispose();
 
                 if (!_inputStreamAccessed)
                     _processInputStream.Dispose();
@@ -169,8 +167,6 @@ namespace Hypersonic.Ffmpeg
             }
 
             _disposed = true;
-
-            base.Dispose(disposing);
         }
     }
 }

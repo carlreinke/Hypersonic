@@ -21,12 +21,12 @@ namespace Hypersonic.Ffmpeg
 {
     internal static class FfmpegTranscoder
     {
-        public static FfmpegStream Transcode(IEnumerable<string> arguments)
+        public static FfmpegProcess Transcode(IEnumerable<string> arguments)
         {
             if (arguments == null)
                 throw new ArgumentNullException(nameof(arguments));
 
-            return new FfmpegStream("ffmpeg", new ArgumentList()
+            return new FfmpegProcess("ffmpeg", new ArgumentList()
                 .Add("-v").Add("fatal")
                 .AddRange(arguments));
         }

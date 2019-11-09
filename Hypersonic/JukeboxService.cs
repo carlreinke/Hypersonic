@@ -340,7 +340,7 @@ namespace Hypersonic
             string format = BitConverter.IsLittleEndian ? "f32le" : "f32be";
             string codec = "pcm_" + format;
 
-            var outArguments = new ArgumentList()
+            var playerArguments = new ArgumentList()
                 .Add("-v").Add("fatal")
                 .Add("-autoexit")
                 .Add("-nodisp")
@@ -369,8 +369,8 @@ namespace Hypersonic
                     WaitHandle.WaitAny(new[] { cancellationToken.WaitHandle, _playEvent });
                 }
 
-                using (var ffplayStream = new FfmpegStream("ffplay", outArguments))
-                using (var outStream = ffplayStream.InputStream)
+                using (var playerProcess = new FfmpegProcess("ffplay", playerArguments))
+                using (var playerStream = playerProcess.InputStream)
                 {
                     var sampleBuffer = new float[sampleRate / 20 * channelCount];
                     var buffer = MemoryMarshal.AsBytes(sampleBuffer.AsSpan());
@@ -417,7 +417,7 @@ namespace Hypersonic
 
                         string filePath = Path.Combine(track.DirectoryPath, track.FileName);
 
-                        var inArguments = new ArgumentList()
+                        var decoderArguments = new ArgumentList()
                             .Add("-i").Add(filePath)
                             .Add("-ss").Add(playerTrackPosition.ToStringInvariant())
                             .Add("-map").Add(b => b.Append("0:").Append(track.StreamIndex.ToStringInvariant()))
@@ -427,9 +427,10 @@ namespace Hypersonic
                             .Add("-f").Add(format)
                             .Add("-");
 
-                        using (var inStream = FfmpegTranscoder.Transcode(inArguments))
+                        using (var decoderProcess = FfmpegTranscoder.Transcode(decoderArguments))
+                        using (var decoderStream = decoderProcess.OutputStream)
                         {
-                            inStream.InputStream.Close();
+                            decoderProcess.InputStream.Close();
 
                             float replayGainScale = MathF.Pow(10, (track.TrackGain ?? 0) / 20);
 
@@ -456,7 +457,7 @@ namespace Hypersonic
 
                                 try
                                 {
-                                    int readCount = inStream.Read(buffer.Slice(bufferOffset + bufferCount));
+                                    int readCount = decoderStream.Read(buffer.Slice(bufferOffset + bufferCount));
                                     if (readCount == 0)
                                         break;
                                     bufferCount += readCount;
@@ -476,7 +477,7 @@ namespace Hypersonic
                                 try
                                 {
                                     int writeCount = samplesSpan.Length * sizeof(float);
-                                    outStream.Write(buffer.Slice(bufferOffset, writeCount));
+                                    playerStream.Write(buffer.Slice(bufferOffset, writeCount));
                                     bufferOffset += writeCount;
                                     bufferCount -= writeCount;
                                 }

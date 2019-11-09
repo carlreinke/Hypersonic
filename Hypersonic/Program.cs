@@ -1225,7 +1225,8 @@ namespace Hypersonic
 
             try
             {
-                using (var stream = new Ffmpeg.FfmpegStream("ffmpeg", arguments))
+                using (var process = new Ffmpeg.FfmpegProcess("ffmpeg", arguments))
+                using (var stream = process.OutputStream)
                 using (var reader = new StreamReader(stream))
                 {
                     string line = reader.ReadLine();
@@ -1240,7 +1241,8 @@ namespace Hypersonic
 
             try
             {
-                using (var stream = new Ffmpeg.FfmpegStream("ffplay", arguments))
+                using (var process = new Ffmpeg.FfmpegProcess("ffplay", arguments))
+                using (var stream = process.OutputStream)
                 using (var reader = new StreamReader(stream))
                 {
                     string line = reader.ReadLine();
@@ -1255,7 +1257,8 @@ namespace Hypersonic
 
             try
             {
-                using (var stream = new Ffmpeg.FfmpegStream("ffprobe", arguments))
+                using (var process = new Ffmpeg.FfmpegProcess("ffprobe", arguments))
+                using (var stream = process.OutputStream)
                 using (var reader = new StreamReader(stream))
                 {
                     string line = reader.ReadLine();

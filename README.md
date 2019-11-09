@@ -24,9 +24,9 @@ Hypersonic does not provide a web interface by default.  One can be added by ins
 ## Dependencies
 
 * .NET core 2.1
-* ffmpeg (including ffprobe and ffplay)
+* FFmpeg (including ffmpeg, ffprobe, and ffplay)
 
-On Linux, the ffmpeg package needs to be installed.  On Windows, the [ffmpeg] executables need to be installed in the same directory as `Hypersonic.dll`.
+On Linux, the `ffmpeg` package needs to be installed.  On Windows, the [FFmpeg] executables need to be installed into the same directory as `Hypersonic.dll`.
 
 ## Getting Started
 
@@ -46,4 +46,4 @@ Music libraries are scanned when the server starts and every 24 hours thereafter
 [Aurial]: https://github.com/shrimpza/aurial
 [DSub]: https://github.com/daneren2005/Subsonic
 [Ultrasonic]: https://github.com/ultrasonic/ultrasonic
-[ffmpeg]: https://ffmpeg.org/download.html
+[FFmpeg]: https://ffmpeg.org/download.html

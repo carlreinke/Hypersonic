@@ -1263,9 +1263,11 @@ namespace Hypersonic
 
             context.Response.ContentType = GetContentTypeForSuffix(format);
 
-            using (var stream = FfmpegTranscoder.Transcode(arguments))
+            using (var process = FfmpegTranscoder.Transcode(arguments))
+            using (context.RequestAborted.Register(process.Abort))
+            using (var stream = process.OutputStream)
             {
-                stream.InputStream.Close();
+                process.InputStream.Close();
 
                 await stream.CopyToAsync(context.Response.Body, context.RequestAborted).ConfigureAwait(false);
             }
@@ -1400,9 +1402,11 @@ namespace Hypersonic
 
             context.Response.ContentType = "image/jpeg";
 
-            using (var stream = FfmpegTranscoder.Transcode(arguments))
+            using (var process = FfmpegTranscoder.Transcode(arguments))
+            using (context.RequestAborted.Register(process.Abort))
+            using (var stream = process.OutputStream)
             {
-                stream.InputStream.Close();
+                process.InputStream.Close();
 
                 await stream.CopyToAsync(context.Response.Body, context.RequestAborted).ConfigureAwait(false);
             }

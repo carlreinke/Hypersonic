@@ -29,15 +29,16 @@ namespace Hypersonic.Ffmpeg
 
         public static ffprobeType Probe(string path, Show show)
         {
-            using (var probeStream = CreateProbeStream(path, show))
+            using (var probeProcess = CreateProbeProcess(path, show))
+            using (var probeStream = probeProcess.OutputStream)
             {
-                probeStream.InputStream.Close();
+                probeProcess.InputStream.Close();
 
                 return ReadProbeResult(probeStream);
             }
         }
 
-        private static FfmpegStream CreateProbeStream(string path, Show show)
+        private static FfmpegProcess CreateProbeProcess(string path, Show show)
         {
             if (path == null)
                 throw new ArgumentNullException(nameof(path));
@@ -72,11 +73,10 @@ namespace Hypersonic.Ffmpeg
             arguments
                 .Add(path);
 
-            var x = new FfmpegStream("ffprobe", arguments);
-            return x;
+            return new FfmpegProcess("ffprobe", arguments);
         }
 
-        private static ffprobeType ReadProbeResult(FfmpegStream probeStream)
+        private static ffprobeType ReadProbeResult(Stream probeStream)
         {
             using (var textReader = new StreamReader(probeStream, Encoding.UTF8))
             using (var reader = new XmlTextReader(textReader))
