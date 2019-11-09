@@ -28,7 +28,7 @@ using System.Threading;
 
 namespace Hypersonic
 {
-    internal class JukeboxService : IDisposable
+    internal sealed class JukeboxService : IDisposable
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
@@ -184,7 +184,7 @@ namespace Hypersonic
                 if (playlistIndex >= _playlist.Count)
                     return;
 
-                _playlist.RemoveAt(_playlistIndex);
+                _playlist.RemoveAt(playlistIndex);
 
                 if (_playlistIndex == playlistIndex)
                 {
@@ -515,7 +515,7 @@ namespace Hypersonic
             }
         }
 
-        public class JukeboxState
+        public readonly struct JukeboxState
         {
             public JukeboxState(bool playing, int playlistIndex, int trackPosition, float gain)
             {
