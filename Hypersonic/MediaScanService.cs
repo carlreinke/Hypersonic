@@ -793,11 +793,13 @@ namespace Hypersonic
 
             if (result.format.tag != null)
                 foreach (var tag in result.format.tag)
-                    tags.Add(tag.key, tag.value);
+                    if (tag.value.Length > 0)
+                        tags[tag.key] = tag.value;
 
             if (stream.tag != null)
                 foreach (var tag in stream.tag)
-                    tags.Add(tag.key, tag.value);
+                    if (tag.value.Length > 0)
+                        tags[tag.key] = tag.value;
 
             return tags;
         }
