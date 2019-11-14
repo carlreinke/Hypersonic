@@ -26,6 +26,14 @@ namespace Hypersonic.Tests
     {
         public static class GetMusicFoldersAsyncTests
         {
+            // TODO: GetMusicFoldersAsync_Always_ReturnsExpectedLibraryDetails
+
+            // TODO: GetMusicFoldersAsync_LibraryIsInaccessible_LibraryIsNotReturned
+
+            // TODO: GetMusicFoldersAsync_LibraryIsAccessibleAccessControlled_LibraryIsReturned
+
+            // TODO: GetMusicFoldersAsync_LibraryIsAccessibleNonAccessControlled_LibraryIsReturned
+
             [Fact]
             public static void TestGetMusicFoldersAsync()
             {

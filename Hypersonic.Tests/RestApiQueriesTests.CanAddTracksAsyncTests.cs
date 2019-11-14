@@ -78,7 +78,7 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
-            public static void CanAddTracksAsync_NonAccessibleTrack_ReturnsFalse()
+            public static void CanAddTracksAsync_InaccessibleTrack_ReturnsFalse()
             {
                 var dbConnection = OpenSqliteDatabase();
 

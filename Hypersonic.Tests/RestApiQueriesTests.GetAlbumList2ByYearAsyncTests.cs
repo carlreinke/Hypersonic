@@ -94,6 +94,7 @@ namespace Hypersonic.Tests
                     var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, library.LibraryId, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
 
                     var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                     Assert.Equal(1, resultAlbum.songCount);
                     Assert.Equal(Math.Round(track.Duration ?? 0), resultAlbum.duration);
                 }
@@ -209,9 +210,79 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
 
-                    var results = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
+                    var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Empty(results.album);
+                    Assert.Empty(result.album);
+                }
+            }
+
+            [Theory]
+            [InlineData(1999, 2001)]
+            [InlineData(2000, 2000)]
+            [InlineData(2001, 1999)]
+            public static void GetAlbumList2ByYearAsync_AlbumIsPlaceholder_AlbumIsNotReturned(int fromYear, int toYear)
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    album.Title = null;
+                    album.SortTitle = null;
+                    album.Date = 2000_00_00;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Empty(result.album);
+                }
+            }
+
+            [Theory]
+            [InlineData(1999, 2001)]
+            [InlineData(2000, 2000)]
+            [InlineData(2001, 1999)]
+            public static void GetAlbumList2ByYearAsync_AlbumArtistIsPlaceholder_ReturnsPlacholderName(int fromYear, int toYear)
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var albumArtist = random.AddArtist();
+                    albumArtist.Name = null;
+                    albumArtist.SortName = null;
+                    var genre = random.AddGenre();
+                    var album = random.AddAlbum(albumArtist, genre: genre);
+                    album.Date = 2000_00_00;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var trackArtist = random.AddArtist();
+                    var track = random.AddTrack(file, trackArtist, album);
+                    var trackGenre = random.AddTrackGenre(track, genre);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("[no artist]", resultAlbum.artist);
                 }
             }
 
@@ -240,9 +311,9 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
 
-                    var results = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
+                    var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Empty(results.album);
+                    Assert.Empty(result.album);
                 }
             }
 
@@ -262,19 +333,19 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
                     var artist = random.AddArtist();
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var inaccessibleAlbum = random.AddAlbum(artist);
+                    inaccessibleAlbum.Date = 2000_00_00;
+                    var inaccessibleDirectory = random.AddDirectory(inaccessibleLibrary);
+                    var inaccessibleFile = random.AddFile(inaccessibleDirectory);
+                    var inaccessibleTrack = random.AddTrack(inaccessibleFile, artist, inaccessibleAlbum);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
                     var accessibleAlbum = random.AddAlbum(artist);
                     accessibleAlbum.Date = 2000_00_00;
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, accessibleAlbum);
-                    var nonAccessibleAlbum = random.AddAlbum(artist);
-                    nonAccessibleAlbum.Date = 2000_00_00;
-                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
-                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
-                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, nonAccessibleAlbum);
                     dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
@@ -288,7 +359,7 @@ namespace Hypersonic.Tests
             [InlineData(1999, 2001)]
             [InlineData(2000, 2000)]
             [InlineData(2001, 1999)]
-            public static void GetAlbumList2ByYearAsync_AlbumHasNonAccessibleTrack_TrackIsNotCounted(int fromYear, int toYear)
+            public static void GetAlbumList2ByYearAsync_AlbumHasInaccessibleTrack_TrackIsNotCounted(int fromYear, int toYear)
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -300,17 +371,17 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
                     album.Date = 2000_00_00;
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var inaccessibleDirectory = random.AddDirectory(inaccessibleLibrary);
+                    var inaccessibleFile = random.AddFile(inaccessibleDirectory);
+                    var inaccessibleTrack = random.AddTrack(inaccessibleFile, artist, album);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, album);
-                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
-                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
-                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, album);
                     dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByYearAsync(dbContext, user.UserId, null, 0, 10, fromYear, toYear, CancellationToken.None).GetAwaiter().GetResult();
@@ -409,12 +480,11 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var library = random.AddLibrary();
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
                     album.Date = date;
-                    var directory = random.AddDirectory(accessibleLibrary);
+                    var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
@@ -443,12 +513,11 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var library = random.AddLibrary();
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
                     album.Date = date;
-                    var directory = random.AddDirectory(accessibleLibrary);
+                    var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
@@ -654,6 +723,8 @@ namespace Hypersonic.Tests
                                 "A",
                                 "a",
                                 "C",
+                                "𝓏",
+                                "𓂀",
                                 null,
                                 "B",
                                 "b",

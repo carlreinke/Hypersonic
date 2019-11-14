@@ -94,6 +94,7 @@ namespace Hypersonic.Tests
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, library.LibraryId, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
                     var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                     Assert.Equal(1, resultAlbum.songCount);
                     Assert.Equal(Math.Round(track.Duration ?? 0), resultAlbum.duration);
                 }
@@ -189,9 +190,73 @@ namespace Hypersonic.Tests
                     var trackGenre = random.AddTrackGenre(track, genre);
                     dbContext.SaveChanges();
 
-                    var results = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name + "!", CancellationToken.None).GetAwaiter().GetResult();
+                    var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name + "!", CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Empty(results.album);
+                    Assert.Empty(result.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2ByGenreAsync_AlbumIsPlaceholder_AlbumIsNotReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var genre = random.AddGenre();
+                    var album = random.AddAlbum(artist, genre: genre);
+                    album.Title = null;
+                    album.SortTitle = null;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    var trackGenre = random.AddTrackGenre(track, genre);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Empty(result.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2ByGenreAsync_AlbumArtistIsPlaceholder_ReturnsPlacholderName()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var albumArtist = random.AddArtist();
+                    albumArtist.Name = null;
+                    albumArtist.SortName = null;
+                    var genre = random.AddGenre();
+                    var album = random.AddAlbum(albumArtist, genre: genre);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var trackArtist = random.AddArtist();
+                    var track = random.AddTrack(file, trackArtist, album);
+                    var trackGenre = random.AddTrackGenre(track, genre);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("[no artist]", resultAlbum.artist);
                 }
             }
 
@@ -218,9 +283,9 @@ namespace Hypersonic.Tests
                     var trackGenre = random.AddTrackGenre(track, genre);
                     dbContext.SaveChanges();
 
-                    var results = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
+                    var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Empty(results.album);
+                    Assert.Empty(result.album);
                 }
             }
 
@@ -237,20 +302,20 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
                     var artist = random.AddArtist();
                     var genre = random.AddGenre();
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var inaccessibleAlbum = random.AddAlbum(artist, genre: genre);
+                    var inaccessibleDirectory = random.AddDirectory(inaccessibleLibrary);
+                    var inaccessibleFile = random.AddFile(inaccessibleDirectory);
+                    var inaccessibleTrack = random.AddTrack(inaccessibleFile, artist, inaccessibleAlbum);
+                    var inaccessibleTrackGenre = random.AddTrackGenre(inaccessibleTrack, genre);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
                     var accessibleAlbum = random.AddAlbum(artist, genre: genre);
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, accessibleAlbum);
                     var accessibleTrackGenre = random.AddTrackGenre(accessibleTrack, genre);
-                    var nonAccessibleAlbum = random.AddAlbum(artist, genre: genre);
-                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
-                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
-                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, nonAccessibleAlbum);
-                    var nonAccessibleTrackGenre = random.AddTrackGenre(nonAccessibleTrack, genre);
                     dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
@@ -261,7 +326,7 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
-            public static void GetAlbumList2ByGenreAsync_AlbumHasNonAccessibleTrack_TrackIsNotCounted()
+            public static void GetAlbumList2ByGenreAsync_AlbumHasInaccessibleTrack_TrackIsNotCounted()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -273,19 +338,19 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
                     var artist = random.AddArtist();
                     var genre = random.AddGenre();
                     var album = random.AddAlbum(artist, genre: genre);
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var inaccessibleDirectory = random.AddDirectory(inaccessibleLibrary);
+                    var inaccessibleFile = random.AddFile(inaccessibleDirectory);
+                    var inaccessibleTrack = random.AddTrack(inaccessibleFile, artist, album);
+                    var inaccessibleTrackGenre = random.AddTrackGenre(inaccessibleTrack, genre);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, album);
                     var accessibleTrackGenre = random.AddTrackGenre(accessibleTrack, genre);
-                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
-                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
-                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, album);
-                    var nonAccessibleTrackGenre = random.AddTrackGenre(nonAccessibleTrack, genre);
                     dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
@@ -536,6 +601,8 @@ namespace Hypersonic.Tests
                                 "A",
                                 "a",
                                 "C",
+                                "𝓏",
+                                "𓂀",
                                 null,
                                 "B",
                                 "b",

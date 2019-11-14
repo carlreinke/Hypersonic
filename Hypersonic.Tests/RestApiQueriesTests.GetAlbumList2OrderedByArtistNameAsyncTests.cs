@@ -89,6 +89,7 @@ namespace Hypersonic.Tests
                     var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, library.LibraryId, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
 
                     var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                     Assert.Equal(1, resultAlbum.songCount);
                     Assert.Equal(Math.Round(track.Duration ?? 0), resultAlbum.duration);
                 }
@@ -162,6 +163,66 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumIsPlaceholder_AlbumIsNotReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    album.Title = null;
+                    album.SortTitle = null;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Empty(result.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumArtistIsPlaceholder_ReturnsPlacholderName()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var albumArtist = random.AddArtist();
+                    albumArtist.Name = null;
+                    albumArtist.SortName = null;
+                    var album = random.AddAlbum(albumArtist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var trackArtist = random.AddArtist();
+                    var track = random.AddTrack(file, trackArtist, album);
+                    dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("[no artist]", resultAlbum.artist);
+                }
+            }
+
+            [Fact]
             public static void GetAlbumList2OrderedByArtistNameAsync_NoAccessibleTrack_ReturnsNoAlbums()
             {
                 var dbConnection = OpenSqliteDatabase();
@@ -182,9 +243,9 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album);
                     dbContext.SaveChanges();
 
-                    var results = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
+                    var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Empty(results.album);
+                    Assert.Empty(result.album);
                 }
             }
 
@@ -201,17 +262,17 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
                     var artist = random.AddArtist();
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var inaccessibleAlbum = random.AddAlbum(artist);
+                    var inaccessibleDirectory = random.AddDirectory(inaccessibleLibrary);
+                    var inaccessibleFile = random.AddFile(inaccessibleDirectory);
+                    var inaccessibleTrack = random.AddTrack(inaccessibleFile, artist, inaccessibleAlbum);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
                     var accessibleAlbum = random.AddAlbum(artist);
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, accessibleAlbum);
-                    var nonAccessibleAlbum = random.AddAlbum(artist);
-                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
-                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
-                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, nonAccessibleAlbum);
                     dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
@@ -222,7 +283,7 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
-            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasNonAccessibleTrack_TrackIsNotCounted()
+            public static void GetAlbumList2OrderedByArtistNameAsync_AlbumHasInaccessibleTrack_TrackIsNotCounted()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -234,16 +295,16 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
-                    var nonAccessibleLibrary = random.AddLibrary(accessControlled: true);
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var inaccessibleDirectory = random.AddDirectory(inaccessibleLibrary);
+                    var inaccessibleFile = random.AddFile(inaccessibleDirectory);
+                    var inaccessibleTrack = random.AddTrack(inaccessibleFile, artist, album);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, album);
-                    var nonAccessibleDirectory = random.AddDirectory(nonAccessibleLibrary);
-                    var nonAccessibleFile = random.AddFile(nonAccessibleDirectory);
-                    var nonAccessibleTrack = random.AddTrack(nonAccessibleFile, artist, album);
                     dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2OrderedByArtistNameAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
@@ -511,6 +572,8 @@ namespace Hypersonic.Tests
                                 "A",
                                 "a",
                                 "C",
+                                "𝓏",
+                                "𓂀",
                                 null,
                                 "B",
                                 "b",
@@ -530,6 +593,8 @@ namespace Hypersonic.Tests
                                         "A",
                                         "a",
                                         "C",
+                                        "𝓏",
+                                        "𓂀",
                                         null,
                                         "B",
                                         "b",

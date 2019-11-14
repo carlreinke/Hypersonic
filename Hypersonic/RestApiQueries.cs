@@ -160,13 +160,13 @@ namespace Hypersonic
                 .GroupBy(e =>
                 {
                     string name = e.ArtistSortName;
-                    if (name != null && name.Length > 0)
+                    if (name != null)
                     {
-                        char c = char.ToUpper(name[0], CultureInfo.CurrentCulture);
-                        if (char.IsLetter(c))
-                            return c;
+                        string t = StringInfo.GetNextTextElement(name).Normalize();
+                        if (t.Length > 0 && char.IsLetter(t, 0))
+                            return t.ToUpper(CultureInfo.CurrentCulture);
                     }
-                    return '#';
+                    return "#";
                 })
                 .OrderBy(g => g.Key.ToString(CultureInfo.CurrentCulture), comparer)
                 // order by artist name using culture-aware comparison
@@ -178,10 +178,18 @@ namespace Hypersonic
                 })
                 .ToArray(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
 
+
+            if (indexes.Length == 0 &&
+                musicFolderId != null &&
+                !dbContext.Libraries.Any(l => l.LibraryId == musicFolderId))
+            {
+                throw RestApiErrorException.DataNotFoundError();
+            }
+
             return new Subsonic.ArtistsID3()
             {
                 index = indexes,
-                ignoredArticles = "",
+                ignoredArticles = string.Empty,
             };
         }
 

@@ -63,7 +63,7 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
-            public static void AddPlaylistSongsAsync_NonAccessibleTrack_ThrowsDataNotFoundError()
+            public static void AddPlaylistSongsAsync_InaccessibleTrack_ThrowsDataNotFoundError()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -195,15 +195,13 @@ namespace Hypersonic.Tests
                     for (int i = 0; i < tracksInPlaylistCount; ++i)
                     {
                         var track = random.AddTrack(file, artist, album);
-                        var playlistTrack = random.AddPlaylistTrack(playlist, track, i);
-
                         tracks.Add(track);
+                        var playlistTrack = random.AddPlaylistTrack(playlist, track, i);
                     }
                     var tracksToAdd = new List<Track>();
                     for (int i = 0; i < tracksToAddCount; ++i)
                     {
                         var track = random.AddTrack(file, artist, album);
-
                         tracksToAdd.Add(track);
                     }
                     dbContext.SaveChanges();

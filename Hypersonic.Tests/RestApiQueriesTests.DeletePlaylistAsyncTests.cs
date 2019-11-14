@@ -122,10 +122,10 @@ namespace Hypersonic.Tests
                     var user2 = random.AddUser();
                     var library = random.AddLibrary();
                     var directory = random.AddDirectory(library);
-                    var trackFile = random.AddFile(directory);
+                    var file = random.AddFile(directory);
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
-                    var track = random.AddTrack(trackFile, artist, album);
+                    var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user1, @public: true);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
                     dbContext.SaveChanges();
@@ -155,10 +155,10 @@ namespace Hypersonic.Tests
                     var user = random.AddUser();
                     var library = random.AddLibrary();
                     var directory = random.AddDirectory(library);
-                    var trackFile = random.AddFile(directory);
+                    var file = random.AddFile(directory);
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
-                    var track = random.AddTrack(trackFile, artist, album);
+                    var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user, playlistIsPublic);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
                     dbContext.SaveChanges();

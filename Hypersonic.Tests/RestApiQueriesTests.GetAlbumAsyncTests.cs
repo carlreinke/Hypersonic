@@ -91,7 +91,7 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
-            public static void GetAlbumAsync_AccessibleTrack_ReturnsExpectedArtistDetails()
+            public static void GetAlbumAsync_AccessibleTrack_ReturnsExpectedAlbumDetails()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -134,6 +134,73 @@ namespace Hypersonic.Tests
                 }
             }
 
+            [Fact]
+            public static void GetAlbumAsync_AlbumIsPlaceholder_ReturnsPlaceholderTitle()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    album.Title = null;
+                    album.SortTitle = null;
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    dbContext.SaveChanges();
+
+                    string transcodedSuffix = "mp3";
+                    var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Equal("[no album]", result.name);
+
+                    var resultTrack = Assert.Single(result.song);
+                    Assert.Equal("[no album]", resultTrack.album);
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumAsync_AlbumArtistIsPlaceholder_ReturnsPlaceholderName()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var albumArtist = random.AddArtist();
+                    albumArtist.Name = null;
+                    albumArtist.SortName = null;
+                    var album = random.AddAlbum(albumArtist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var trackArtist = random.AddArtist();
+                    var track = random.AddTrack(file, trackArtist, album);
+                    dbContext.SaveChanges();
+
+                    string transcodedSuffix = "mp3";
+                    var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Equal("[no artist]", result.artist);
+
+                    var resultTrack = Assert.Single(result.song);
+                    Assert.Equal(track.Artist.Name, resultTrack.artist);
+                }
+            }
+
             [Theory]
             [InlineData(1)]
             [InlineData(2)]
@@ -160,6 +227,10 @@ namespace Hypersonic.Tests
                         var track = random.AddTrack(file, artist, album);
                         tracks.Add(track);
                     }
+                    var otherAlbum = random.AddAlbum(artist);
+                    var otherDirectory = random.AddDirectory(library);
+                    var otherFile = random.AddFile(otherDirectory);
+                    var otherTrack = random.AddTrack(otherFile, artist, otherAlbum);
                     dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
@@ -221,6 +292,40 @@ namespace Hypersonic.Tests
                         Assert.False(resultTrack.originalHeightSpecified);
                         Assert.Equal(default, resultTrack.originalHeight);
                     }
+                }
+            }
+
+            [Fact]
+            public static void GetAlbumAsync_TrackArtistIsPlaceholder_ReturnsPlaceholderName()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var albumArtist = random.AddArtist();
+                    var album = random.AddAlbum(albumArtist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var trackArtist = random.AddArtist();
+                    trackArtist.Name = null;
+                    trackArtist.SortName = null;
+                    var track = random.AddTrack(file, trackArtist, album);
+                    dbContext.SaveChanges();
+
+                    string transcodedSuffix = "mp3";
+                    var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Equal(album.Artist.Name, result.artist);
+
+                    var resultTrack = Assert.Single(result.song);
+                    Assert.Equal("[no artist]", resultTrack.artist);
                 }
             }
 
@@ -695,6 +800,8 @@ namespace Hypersonic.Tests
                                         "A",
                                         "a",
                                         "C",
+                                        "𝓏",
+                                        "𓂀",
                                         null,
                                         "B",
                                         "b",
