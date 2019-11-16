@@ -23,6 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using static Hypersonic.Data.Queries;
 using static Hypersonic.Subsonic.Helpers;
 
 namespace Hypersonic
@@ -34,8 +35,7 @@ namespace Hypersonic
         internal static async Task<Subsonic.MusicFolders> GetMusicFoldersAsync(MediaInfoContext dbContext, int apiUserId, CancellationToken cancellationToken)
         {
             Subsonic.MusicFolder[] musicFolders = await dbContext.Libraries
-                // where library is accessible by user
-                .Where(l => !l.IsAccessControlled || l.LibraryUsers.Any(lu => lu.UserId == apiUserId))
+                .WhereIsAccessibleBy(apiUserId)
                 .Select(l => new
                 {
                     l.LibraryId,
@@ -57,53 +57,11 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.Genres> GetGenresAsync(MediaInfoContext dbContext, int apiUserId, CancellationToken cancellationToken)
         {
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId);
-
-            // TODO: Albums count and tracks count should be doable in one query if EF will let us.
-
-            var genresWithAlbumsCountQuery = dbContext.TrackGenres
-                // find genre and album of tracks (also excludes genres without any tracks)
-                .Join(tracksQuery, tg => tg.TrackId, t => t.TrackId, (tg, t) => new
-                {
-                    tg.GenreId,
-                    t.AlbumId,
-                })
-                .Distinct()
-                .GroupBy(e => e.GenreId)
-                // count albums
-                .Select(grouping => new
-                {
-                    GenreId = grouping.Key,
-                    AlbumsCount = grouping.Count(),
-                });
-
-            var genresWithTracksCountQuery = dbContext.TrackGenres
-                // find genre of tracks (also excludes genres without any tracks)
-                .Join(tracksQuery, tg => tg.TrackId, t => t.TrackId, (tg, t) => new
-                {
-                    tg.GenreId,
-                    t.TrackId,
-                })
-                .GroupBy(e => e.GenreId)
-                // count tracks
-                .Select(grouping => new
-                {
-                    GenreId = grouping.Key,
-                    TracksCount = grouping.Count(),
-                });
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId);
 
             Subsonic.Genre[] genres = await dbContext.Genres
-                .Join(genresWithAlbumsCountQuery, g => g.GenreId, e => e.GenreId, (g, a) => new
-                {
-                    Genre = g,
-                    a.AlbumsCount,
-                })
-                .Join(genresWithTracksCountQuery, e => e.Genre.GenreId, e => e.GenreId, (e, t) => new
-                {
-                    e.Genre,
-                    e.AlbumsCount,
-                    t.TracksCount,
-                })
+                .WithCounts(dbContext, tracksQuery)
                 .Select(e => CreateGenre(
                     e.Genre.Name,
                     e.AlbumsCount,
@@ -120,32 +78,12 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            IQueryable<ArtistIdWithAlbumsCount> artistIdsWithAlbumsCountQuery = GetArtistIdsWithAlbumsCountQuery(dbContext, tracksQuery);
-
-            IQueryable<ArtistStar> artistStarsQuery = GetArtistStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.IndexID3[] indexes = await Task.WhenAll(await dbContext.Artists
-                // include album aggregation (excludes artists without albums with tracks)
-                .Join(artistIdsWithAlbumsCountQuery, a => a.ArtistId, e => e.ArtistId, (a, e) => new
-                {
-                    Artist = a,
-                    e.AlbumsCount,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(artistStarsQuery, e => e.Artist.ArtistId, s => s.ArtistId, (e, ss) => new
-                {
-                    e.Artist,
-                    Stars = ss,
-                    e.AlbumsCount,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Artist,
-                    Starred = s.Added as DateTime?,
-                    e.AlbumsCount,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithAlbumsCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     ArtistSortName = e.Artist.SortName ?? e.Artist.Name,
@@ -197,22 +135,10 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<ArtistStar> artistStarsQuery = GetArtistStarsQuery(dbContext, apiUserId);
-
             Subsonic.ArtistWithAlbumsID3 artist = await dbContext.Artists
                 // where artist is requested artist
                 .Where(a => a.ArtistId == artistId)
-                // include indication if artist is starred by user
-                .GroupJoin(artistStarsQuery, a => a.ArtistId, s => s.ArtistId, (a, ss) => new
-                {
-                    Artist = a,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Artist,
-                    Starred = s.Added as DateTime?
-                })
+                .WithStarredBy(dbContext, apiUserId)
                 .Select(e => CreateArtistWithAlbumsID3(
                     e.Artist.ArtistId,
                     e.Artist.Name,
@@ -221,37 +147,14 @@ namespace Hypersonic
             if (artist == null)
                 throw RestApiErrorException.DataNotFoundError();
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId);
-
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId);
 
             Subsonic.AlbumID3[] albums = await dbContext.Albums
                 // where album is by requested artist
                 .Where(a => a.ArtistId == artistId)
-                // include track aggregations (excludes albums without tracks)
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -289,22 +192,10 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
-
             Subsonic.AlbumWithSongsID3 album = await dbContext.Albums
                 // where album is requested album
                 .Where(a => a.AlbumId == albumId)
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, a => a.AlbumId, s => s.AlbumId, (a, ss) => new
-                {
-                    Album = a,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                })
+                .WithStarredBy(dbContext, apiUserId)
                 .Select(e => CreateAlbumWithSongsID3(
                     e.Album.ArtistId,
                     e.Album.Artist.Name,
@@ -319,22 +210,11 @@ namespace Hypersonic
             if (album == null)
                 throw RestApiErrorException.DataNotFoundError();
 
-            IQueryable<Track> tracksByAlbumIdQuery = GetTracksByAlbumIdQuery(dbContext, apiUserId, albumId);
-
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
-            Subsonic.Child[] tracks = await tracksByAlbumIdQuery
-                // include indication if track is starred by user
-                .GroupJoin(trackStarsQuery, t => t.TrackId, s => s.TrackId, (t, ss) => new
-                {
-                    Track = t,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Track,
-                    Starred = s.Added as DateTime?,
-                })
+            Subsonic.Child[] tracks = await dbContext.Tracks
+                // where track is on requested album
+                .Where(t => t.AlbumId == albumId)
+                .WhereIsAccessibleBy(apiUserId)
+                .WithStarredBy(dbContext, apiUserId)
                 .Select(e => new
                 {
                     e.Track.TrackId,
@@ -382,24 +262,11 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId);
-
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
-            Subsonic.Child track = await tracksQuery
+            Subsonic.Child track = await dbContext.Tracks
                 // where track is requested track
                 .Where(t => t.TrackId == trackId)
-                // include indication if track is starred by user
-                .GroupJoin(trackStarsQuery, t => t.TrackId, s => s.TrackId, (t, ss) => new
-                {
-                    Track = t,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Track,
-                    Starred = s.Added as DateTime?,
-                })
+                .WhereIsAccessibleBy(apiUserId)
+                .WithStarredBy(dbContext, apiUserId)
                 .Select(e => CreateTrackChild(
                     e.Track.File.Name,
                     e.Track.File.Size,
@@ -432,39 +299,15 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.AlbumList2> GetAlbumList2RandomAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, int count, CancellationToken cancellationToken)
         {
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.AlbumID3[] albums = await dbContext.Albums
-                // where album is not a placeholder for non-album tracks
-                .Where(a => a.Title != null)
-                // include track aggregations (excludes albums without tracks)
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WhereIsNotPlaceholder()
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 // order randomly
-                .OrderBy(a => MediaInfoContext.Random())
+                .OrderBy(_ => MediaInfoContext.Random())
                 .Select(e => CreateAlbumID3(
                     e.Album.ArtistId,
                     e.Album.Artist.Name,
@@ -496,37 +339,13 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.AlbumList2> GetAlbumList2NewestAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, int offset, int count, CancellationToken cancellationToken)
         {
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.AlbumID3[] albums = await dbContext.Albums
-                // where album is not a placeholder for non-album tracks
-                .Where(a => a.Title != null)
-                // include track aggregations (excludes albums without tracks)
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WhereIsNotPlaceholder()
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 // order by reverse "added" timestamp
                 .OrderByDescending(e => e.Album.Added)
                 // ensure stable ordering for pagination
@@ -565,13 +384,9 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
             int[] albumIds = await dbContext.Albums
-                // where album is not a placeholder for non-album tracks
-                .Where(a => a.Title != null)
-                // where album has tracks in library accessible by user
-                .Where(a => tracksQuery.Any(t => t.AlbumId == a.AlbumId))
+                .WhereIsNotPlaceholder()
+                .WhereIsAccessibleBy(dbContext, apiUserId, musicFolderId)
                 .Select(a => new
                 {
                     a.AlbumId,
@@ -595,35 +410,14 @@ namespace Hypersonic
                 throw RestApiErrorException.DataNotFoundError();
             }
 
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.AlbumID3[] albums = await dbContext.Albums
                 // where album is in results
                 .Where(a => albumIds.Contains(a.AlbumId))
-                // include track aggregations
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -659,15 +453,11 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
             int[] albumIds = await dbContext.Albums
                 // where album has an artist
                 .Where(a => a.Artist != null)
-                // where album is not a placeholder for non-album tracks
-                .Where(a => a.Title != null)
-                // where album has tracks in library accessible by user
-                .Where(a => tracksQuery.Any(t => t.AlbumId == a.AlbumId))
+                .WhereIsNotPlaceholder()
+                .WhereIsAccessibleBy(dbContext, apiUserId, musicFolderId)
                 .Select(a => new
                 {
                     a.AlbumId,
@@ -697,35 +487,14 @@ namespace Hypersonic
                 throw RestApiErrorException.DataNotFoundError();
             }
 
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.AlbumID3[] albums = await dbContext.Albums
                 // where album is in results
                 .Where(a => albumIds.Contains(a.AlbumId))
-                // include track aggregations
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -767,20 +536,15 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
-
             int[] albumIds = await dbContext.Albums
-                // where album has tracks in library accessible by user
-                .Where(a => tracksQuery.Any(t => t.AlbumId == a.AlbumId))
-                // exclude albums not starred by user
-                .Join(albumStarsQuery, a => a.AlbumId, s => s.AlbumId, (a, s) => new
+                .WhereIsAccessibleBy(dbContext, apiUserId, musicFolderId)
+                .WhereIsStarredBy(dbContext, apiUserId)
+                .Select(e => new
                 {
-                    a.AlbumId,
-                    AlbumArtistSortName = a.Artist.SortName ?? a.Artist.Name,
-                    AlbumDate = a.Date,
-                    AlbumSortTitle = a.SortTitle ?? a.Title,
+                    e.Album.AlbumId,
+                    AlbumArtistSortName = e.Album.Artist.SortName ?? e.Album.Artist.Name,
+                    AlbumDate = e.Album.Date,
+                    AlbumSortTitle = e.Album.SortTitle ?? e.Album.Title,
                 })
                 .AsAsyncEnumerable()
                 // order by album title using culture-aware comparison
@@ -800,27 +564,14 @@ namespace Hypersonic
                 throw RestApiErrorException.DataNotFoundError();
             }
 
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.AlbumID3[] albums = await dbContext.Albums
                 // where album is in results
                 .Where(a => albumIds.Contains(a.AlbumId))
-                // include track aggregations (excludes albums without tracks)
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user (excludes albums not starred by
-                // user)
-                .Join(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -858,17 +609,13 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
             var albumIdsEnumerable = dbContext.Albums
-                // where album is not a placeholder for non-album tracks
-                .Where(a => a.Title != null)
                 // where album year is in requested year range
                 .Where(a => fromYear <= toYear
                     ? a.Date >= fromYear * 10000 && a.Date < (toYear + 1) * 10000
                     : a.Date >= toYear * 10000 && a.Date < (fromYear + 1) * 10000)
-                // where album has tracks in library accessible by user
-                .Where(a => tracksQuery.Any(t => t.AlbumId == a.AlbumId))
+                .WhereIsNotPlaceholder()
+                .WhereIsAccessibleBy(dbContext, apiUserId, musicFolderId)
                 .Select(a => new
                 {
                     a.AlbumId,
@@ -912,35 +659,14 @@ namespace Hypersonic
                 throw RestApiErrorException.DataNotFoundError();
             }
 
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             var albumsEnumerable = dbContext.Albums
                 // where album is in results
                 .Where(a => albumIds.Contains(a.AlbumId))
-                // include track aggregations
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -996,21 +722,24 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
             int? genreId = await dbContext.Genres
                 .Where(g => g.Name == genre)
                 .Select(g => g.GenreId as int?)
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+            if (genreId == null)
+            {
+                return new Subsonic.AlbumList2()
+                {
+                    album = Array.Empty<Subsonic.AlbumID3>(),
+                };
+            }
+
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             int[] albumIds = await dbContext.Albums
-                // where album is not a placeholder for non-album tracks
-                .Where(a => a.Title != null)
-                // where album has tracks with requested genre in library accessible by user
-                .Where(a => tracksQuery
-                    .Where(t => t.AlbumId == a.AlbumId)
-                    .Join(dbContext.TrackGenres, t => t.TrackId, tg => tg.TrackId, (t, tg) => tg)
-                    .Any(tg => tg.GenreId == genreId))
+                .WhereIsNotPlaceholder()
+                .WhereHasTrackWithGenre(dbContext, tracksQuery, (int)genreId)
                 .Select(a => new
                 {
                     a.AlbumId,
@@ -1036,35 +765,11 @@ namespace Hypersonic
                 throw RestApiErrorException.DataNotFoundError();
             }
 
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
-
             Subsonic.AlbumID3[] albums = await dbContext.Albums
                 // where album is in results
                 .Where(a => albumIds.Contains(a.AlbumId))
-                // include track aggregations
-                .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                {
-                    Album = a,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                // include indication if album is starred by user
-                .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                {
-                    e.Album,
-                    Stars = ss,
-                    e.TracksCount,
-                    e.Duration,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Album,
-                    Starred = s.Added as DateTime?,
-                    e.TracksCount,
-                    e.Duration,
-                })
+                .WithStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -1107,31 +812,18 @@ namespace Hypersonic
                     .Select(g => g.GenreId as int?)
                     .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
-            Subsonic.Child[] tracks = await tracksQuery
+            Subsonic.Child[] tracks = await dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId)
                 // where tracks have requested genre (if specified)
                 .Where(t => genreId == null || t.TrackGenres.Any(tg => tg.GenreId == genreId))
                 // where album year is in requested year range
                 .Where(t => !fromYear.HasValue || t.Date >= fromYear.Value * 10000)
                 .Where(t => !toYear.HasValue || t.Date < (toYear.Value + 1) * 10000)
                 // order randomly
-                .OrderBy(t => MediaInfoContext.Random())
+                .OrderBy(_ => MediaInfoContext.Random())
                 // limit number of results
                 .Take(count)
-                // include indication if track is starred by user
-                .GroupJoin(trackStarsQuery, t => t.TrackId, s => s.TrackId, (t, ss) => new
-                {
-                    Track = t,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Track,
-                    Starred = s.Added as DateTime?,
-                })
+                .WithStarredBy(dbContext, apiUserId)
                 .Select(e => CreateTrackChild(
                     e.Track.File.Name,
                     e.Track.File.Size,
@@ -1167,13 +859,17 @@ namespace Hypersonic
                 .Where(g => g.Name == genre)
                 .Select(g => g.GenreId as int?)
                 .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+            if (genreId == null)
+            {
+                return new Subsonic.Songs()
+                {
+                    song = Array.Empty<Subsonic.Child>(),
+                };
+            }
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            int[] trackIds = await dbContext.TrackGenres
-                // where track has requested genre
-                .Where(tg => tg.GenreId == genreId)
-                .Join(tracksQuery, tg => tg.TrackId, t => t.TrackId, (tg, t) => t)
+            int[] trackIds = await dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId)
+                .WhereHasGenre(dbContext, (int)genreId)
                 .Select(t => new
                 {
                     t.TrackId,
@@ -1190,22 +886,10 @@ namespace Hypersonic
                 .Take(count)
                 .ToArray(cancellationToken).ConfigureAwait(false);
 
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
             Subsonic.Child[] tracks = await dbContext.Tracks
                 // where track has requested genre
                 .Where(t => trackIds.Contains(t.TrackId))
-                // include indication if track is starred by user
-                .GroupJoin(trackStarsQuery, t => t.TrackId, s => s.TrackId, (t, ss) => new
-                {
-                    Track = t,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Track,
-                    Starred = s.Added as DateTime?,
-                })
+                .WithStarredBy(dbContext, apiUserId)
                 .Select(e => new
                 {
                     e.Track.TrackId,
@@ -1248,27 +932,12 @@ namespace Hypersonic
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
-
-            IQueryable<ArtistIdWithAlbumsCount> artistIdsWithAlbumsCountQuery = GetArtistIdsWithAlbumsCountQuery(dbContext, tracksQuery);
-
-            IQueryable<ArtistStar> artistStarsQuery = GetArtistStarsQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             Subsonic.ArtistID3[] artists = await dbContext.Artists
-                // include indication if artist is starred by user (excludes albums not starred by
-                // user)
-                .Join(artistStarsQuery, a => a.ArtistId, s => s.ArtistId, (a, s) => new
-                {
-                    Artist = a,
-                    Starred = s.Added,
-                })
-                // include album aggregation (excludes artists without albums with tracks)
-                .Join(artistIdsWithAlbumsCountQuery, e => e.Artist.ArtistId, e => e.ArtistId, (e1, e2) => new
-                {
-                    e1.Artist,
-                    e1.Starred,
-                    e2.AlbumsCount,
-                })
+                .WhereIsStarredBy(dbContext, apiUserId)
+                .WithAlbumsCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     ArtistSortName = e.Artist.SortName ?? e.Artist.Name,
@@ -1284,26 +953,9 @@ namespace Hypersonic
                 .Select(e => e.Item)
                 .ToArray(cancellationToken).ConfigureAwait(false);
 
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
-
-            IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
             Subsonic.AlbumID3[] albums = await dbContext.Albums
-                // include indication if album is starred by user (excludes albums not starred by
-                // user)
-                .Join(albumStarsQuery, a => a.AlbumId, s => s.AlbumId, (a, s) => new
-                {
-                    Album = a,
-                    Starred = s.Added,
-                })
-                // include track aggregations (excludes albums without tracks)
-                .Join(albumIdsWithTracksCountQuery, e => e.Album.AlbumId, e => e.AlbumId, (e1, e2) => new
-                {
-                    e1.Album,
-                    e1.Starred,
-                    e2.TracksCount,
-                    e2.Duration,
-                })
+                .WhereIsStarredBy(dbContext, apiUserId)
+                .WithTracksCount(dbContext, tracksQuery)
                 .Select(e => new
                 {
                     e.Album.AlbumId,
@@ -1329,16 +981,8 @@ namespace Hypersonic
                 .Select(e => e.Item)
                 .ToArray(cancellationToken).ConfigureAwait(false);
 
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
             Subsonic.Child[] tracks = await dbContext.Tracks
-                // include indication if track is starred by user (excludes tracks not starred by
-                // user)
-                .Join(trackStarsQuery, t => t.TrackId, s => s.TrackId, (t, s) => new
-                {
-                    Track = t,
-                    Starred = s.Added,
-                })
+                .WhereIsStarredBy(dbContext, apiUserId)
                 .Select(e => new
                 {
                     e.Track.TrackId,
@@ -1398,7 +1042,8 @@ namespace Hypersonic
             Subsonic.AlbumID3[] albums;
             Subsonic.Child[] tracks;
 
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId, musicFolderId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId, musicFolderId);
 
             if (artistCount == 0)
             {
@@ -1429,32 +1074,11 @@ namespace Hypersonic
                     .Take(artistCount)
                     .ToArray(cancellationToken).ConfigureAwait(false);
 
-                IQueryable<ArtistIdWithAlbumsCount> artistIdsWithAlbumsCountQuery = GetArtistIdsWithAlbumsCountQuery(dbContext, tracksQuery);
-
-                IQueryable<ArtistStar> artistStarsQuery = GetArtistStarsQuery(dbContext, apiUserId);
-
                 artists = await dbContext.Artists
                     // where artist is search hit
                     .Where(a => artistIds.Contains(a.ArtistId))
-                    // include album aggregation (excludes artists without albums with tracks)
-                    .Join(artistIdsWithAlbumsCountQuery, a => a.ArtistId, e => e.ArtistId, (a, e) => new
-                    {
-                        Artist = a,
-                        e.AlbumsCount,
-                    })
-                    // include indication if album is starred by user
-                    .GroupJoin(artistStarsQuery, e => e.Artist.ArtistId, s => s.ArtistId, (e, ss) => new
-                    {
-                        e.Artist,
-                        Stars = ss,
-                        e.AlbumsCount,
-                    })
-                    .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                    {
-                        e.Artist,
-                        Starred = s.Added as DateTime?,
-                        e.AlbumsCount,
-                    })
+                    .WithStarredBy(dbContext, apiUserId)
+                    .WithAlbumsCount(dbContext, tracksQuery)
                     .Select(e => CreateArtistID3(
                         e.Artist.ArtistId,
                         e.Artist.Name,
@@ -1475,14 +1099,14 @@ namespace Hypersonic
                         t.AlbumId,
                     })
                     .Distinct()
-                    .Join(dbContext.Albums, e => e.AlbumId, a => a.AlbumId, (e, a) => new
+                    .Join(dbContext.Albums, e => e.AlbumId, a => a.AlbumId, (e, a) => a)
+                    .WhereIsNotPlaceholder()
+                    .Select(a => new
                     {
                         a.AlbumId,
                         ArtistName = a.Artist.Name,
                         AlbumTitle = a.Title,
                     })
-                    // where album is not a placeholder for non-album tracks
-                    .Where(a => a.AlbumTitle != null)
                     .OrderBy(t => t.AlbumId)
                     .AsAsyncEnumerable()
                     // where album matches search query
@@ -1493,35 +1117,11 @@ namespace Hypersonic
                     .Take(albumCount)
                     .ToArray(cancellationToken).ConfigureAwait(false);
 
-                IQueryable<AlbumIdWithTracksCount> albumIdsWithTracksCountQuery = GetAlbumIdsWithTracksCountQuery(dbContext, tracksQuery);
-
-                IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
-
                 albums = await dbContext.Albums
                     // where album is a search hit
                     .Where(a => albumIds.Contains(a.AlbumId))
-                    // include track aggregations (excludes albums without tracks)
-                    .Join(albumIdsWithTracksCountQuery, a => a.AlbumId, e => e.AlbumId, (a, e) => new
-                    {
-                        Album = a,
-                        e.TracksCount,
-                        e.Duration,
-                    })
-                    // include indication if album is starred by user
-                    .GroupJoin(albumStarsQuery, e => e.Album.AlbumId, s => s.AlbumId, (e, ss) => new
-                    {
-                        e.Album,
-                        Stars = ss,
-                        e.TracksCount,
-                        e.Duration,
-                    })
-                    .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                    {
-                        e.Album,
-                        Starred = s.Added as DateTime?,
-                        e.TracksCount,
-                        e.Duration,
-                    })
+                    .WithStarredBy(dbContext, apiUserId)
+                    .WithTracksCount(dbContext, tracksQuery)
                     .Select(e => CreateAlbumID3(
                         e.Album.ArtistId,
                         e.Album.Artist.Name,
@@ -1561,22 +1161,10 @@ namespace Hypersonic
                     .Take(songCount)
                     .ToArray(cancellationToken).ConfigureAwait(false);
 
-                IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
                 tracks = await dbContext.Tracks
                     // where track is a search hit
                     .Where(t => trackIds.Contains(t.TrackId))
-                    // include indication if track is starred by user
-                    .GroupJoin(trackStarsQuery, t => t.TrackId, s => s.TrackId, (t, ss) => new
-                    {
-                        Track = t,
-                        Stars = ss,
-                    })
-                    .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                    {
-                        e.Track,
-                        Starred = s.Added as DateTime?,
-                    })
+                    .WithStarredBy(dbContext, apiUserId)
                     .Select(e => CreateTrackChild(
                         e.Track.File.Name,
                         e.Track.File.Size,
@@ -1640,9 +1228,40 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.Playlists> GetPlaylistsAsync(MediaInfoContext dbContext, int apiUserId, CancellationToken cancellationToken)
         {
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId);
 
-            IQueryable<PlaylistIdWithTracksCount> playlistIdsWithTracksCountQuery = GetPlaylistIdsWithTracksCountQuery(dbContext, tracksQuery);
+            var playlistIdsWithTracksCountQuery = dbContext.Playlists
+                // find playlist tracks (includes playlists without tracks)
+                .GroupJoin(dbContext.PlaylistTracks, p => p.PlaylistId, pt => pt.PlaylistId, (p, pts) => new
+                {
+                    p.PlaylistId,
+                    PlaylistTracks = pts,
+                })
+                .SelectMany(e => e.PlaylistTracks.DefaultIfEmpty(), (e, pt) => new
+                {
+                    e.PlaylistId,
+                    pt.TrackId,
+                })
+                .GroupJoin(tracksQuery, e => e.TrackId, t => t.TrackId, (e, ts) => new
+                {
+                    e.PlaylistId,
+                    Tracks = ts,
+                })
+                .SelectMany(e => e.Tracks.DefaultIfEmpty(), (e, t) => new
+                {
+                    e.PlaylistId,
+                    TrackOne = t != null ? 1 : 0,
+                    TrackDuration = t.Duration ?? 0,
+                })
+                .GroupBy(e => e.PlaylistId)
+                // count playlist tracks and compute playlist duration
+                .Select(grouping => new
+                {
+                    PlaylistId = grouping.Key,
+                    TracksCount = grouping.Sum(e => e.TrackOne),
+                    Duration = grouping.Sum(e => e.TrackDuration),
+                });
 
             Subsonic.Playlist[] playlists = await dbContext.Playlists
                 // where playlist is owned by user or is public
@@ -1674,10 +1293,6 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.PlaylistWithSongs> GetPlaylistAsync(MediaInfoContext dbContext, int apiUserId, int playlistId, string transcodedSuffix, CancellationToken cancellationToken)
         {
-            IQueryable<Track> tracksQuery = GetTracksQuery(dbContext, apiUserId);
-
-            IQueryable<AlbumStar> albumStarsQuery = GetAlbumStarsQuery(dbContext, apiUserId);
-
             Subsonic.PlaylistWithSongs playlist = await dbContext.Playlists
                 // where playlist is requested playlist
                 .Where(p => p.PlaylistId == playlistId)
@@ -1695,23 +1310,18 @@ namespace Hypersonic
             if (playlist == null)
                 throw RestApiErrorException.DataNotFoundError();
 
-            IQueryable<TrackWithPlaylistIndex> tracksByPlaylistIdQuery = GetTracksByPlaylistIdQuery(dbContext, apiUserId, playlistId);
+            var playlistTracksQuery = dbContext.PlaylistTracks
+                // where track is on requested playlist
+                .Where(pt => pt.PlaylistId == playlistId);
 
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
-            Subsonic.Child[] tracks = await tracksByPlaylistIdQuery
-                // include indication if track is starred by user
-                .GroupJoin(trackStarsQuery, e => e.Track.TrackId, s => s.TrackId, (e, ss) => new
+            Subsonic.Child[] tracks = await dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId)
+                .WithStarredBy(dbContext, apiUserId)
+                .Join(playlistTracksQuery, e => e.Track.TrackId, pt => pt.TrackId, (e, pt) => new
                 {
                     e.Track,
-                    Stars = ss,
-                    e.PlaylistIndex,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.Track,
-                    Starred = s.Added as DateTime?,
-                    e.PlaylistIndex,
+                    e.Starred,
+                    PlaylistIndex = pt.Index,
                 })
                 // order by playlist index
                 .OrderBy(e => e.PlaylistIndex)
@@ -1854,7 +1464,8 @@ namespace Hypersonic
         {
             // NOTE: Assumes playlist ownership has already been checked.
 
-            var tracksQuery = GetTracksQuery(dbContext, apiUserId);
+            IQueryable<Track> tracksQuery = dbContext.Tracks
+                .WhereIsAccessibleBy(apiUserId);
 
             foreach (int index in songIndexes)
             {
@@ -1896,7 +1507,10 @@ namespace Hypersonic
         {
             foreach (int trackId in trackIds)
             {
-                IQueryable<Track> trackByIdQuery = GetTrackByIdQuery(dbContext, apiUserId, trackId);
+                IQueryable<Track> trackByIdQuery = dbContext.Tracks
+                    // where track is requested track
+                    .Where(t => t.TrackId == trackId)
+                    .WhereIsAccessibleBy(apiUserId);
 
                 bool trackExists = await trackByIdQuery
                     .AnyAsync(cancellationToken).ConfigureAwait(false);
@@ -1913,7 +1527,10 @@ namespace Hypersonic
 
         internal static async Task<TrackStreamInfo> GetTrackStreamInfoAsync(MediaInfoContext dbContext, int apiUserId, int trackId, CancellationToken cancellationToken)
         {
-            IQueryable<Track> trackByIdQuery = GetTrackByIdQuery(dbContext, apiUserId, trackId);
+            IQueryable<Track> trackByIdQuery = dbContext.Tracks
+                // where track is requested track
+                .Where(t => t.TrackId == trackId)
+                .WhereIsAccessibleBy(apiUserId);
 
             TrackStreamInfo trackStreamInfo = await trackByIdQuery
                 // find files for tracks
@@ -1937,9 +1554,10 @@ namespace Hypersonic
 
         internal static async Task<CoverArtStreamInfo> GetCoverArtStreamInfoAsync(MediaInfoContext dbContext, int apiUserId, long hash, CancellationToken cancellationToken)
         {
-            IQueryable<Picture> picturesByStreamHashQuery = GetPicturesByStreamHashQuery(dbContext, apiUserId, hash);
-
-            CoverArtStreamInfo coverArtStreamInfo = await picturesByStreamHashQuery
+            CoverArtStreamInfo coverArtStreamInfo = await dbContext.Pictures
+                // where picture is requested picture
+                .Where(p => p.StreamHash == hash)
+                .WhereIsAccessibleBy(apiUserId)
                 // find files for pictures
                 .Join(dbContext.Files, p => p.FileId, f => f.FileId, (p, f) => new CoverArtStreamInfo
                 {
@@ -2075,29 +1693,16 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.Child[]> GetTracksAsync(MediaInfoContext dbContext, int apiUserId, IReadOnlyList<int> trackIds, string transcodedSuffix, CancellationToken cancellationToken)
         {
-            IQueryable<TrackStar> trackStarsQuery = GetTrackStarsQuery(dbContext, apiUserId);
-
             Subsonic.Child[] tracks = await dbContext.Tracks
                 // where track is in playlist
                 .Where(t => trackIds.Contains(t.TrackId))
+                .WithStarredBy(dbContext, apiUserId)
                 // find files for tracks
-                .Join(dbContext.Files, t => t.FileId, f => f.FileId, (t, f) => new
+                .Join(dbContext.Files, e => e.Track.FileId, f => f.FileId, (e, f) => new
                 {
                     File = f,
-                    Track = t,
-                })
-                // include indication if track is starred by user
-                .GroupJoin(trackStarsQuery, e => e.Track.TrackId, s => s.TrackId, (e, ss) => new
-                {
-                    e.File,
                     e.Track,
-                    Stars = ss,
-                })
-                .SelectMany(e => e.Stars.DefaultIfEmpty(), (e, s) => new
-                {
-                    e.File,
-                    e.Track,
-                    Starred = s.Added as DateTime?,
+                    e.Starred,
                 })
                 .Select(e => CreateTrackChild(
                     e.File.Name,
@@ -2327,155 +1932,6 @@ namespace Hypersonic
 
         #endregion
 
-        private static IQueryable<Track> GetTracksQuery(MediaInfoContext dbContext, int apiUserId)
-        {
-            return dbContext.Tracks
-                // where library containing track is accessible by user
-                .Where(t => !t.Library.IsAccessControlled || t.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<Track> GetTracksQuery(MediaInfoContext dbContext, int apiUserId, int? musicFolderId)
-        {
-            return dbContext.Tracks
-                // where tracks are in requested library (if specified)
-                .Where(t => !musicFolderId.HasValue || t.LibraryId == musicFolderId.Value)
-                // where library containing track is accessible by user
-                .Where(t => !t.Library.IsAccessControlled || t.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<Track> GetTrackByIdQuery(MediaInfoContext dbContext, int apiUserId, int trackId)
-        {
-            return dbContext.Tracks
-                // where track is requested track
-                .Where(t => t.TrackId == trackId)
-                // where library containing track is accessible by user
-                .Where(t => !t.Library.IsAccessControlled || t.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<Track> GetTracksByAlbumIdQuery(MediaInfoContext dbContext, int apiUserId, int albumId)
-        {
-            return dbContext.Tracks
-                // where track is on requested album
-                .Where(t => t.AlbumId == albumId)
-                // where library containing track is accessible by user
-                .Where(t => !t.Library.IsAccessControlled || t.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<TrackWithPlaylistIndex> GetTracksByPlaylistIdQuery(MediaInfoContext dbContext, int apiUserId, int playlistId)
-        {
-            IQueryable<Track> tracks = GetTracksQuery(dbContext, apiUserId);
-
-            return dbContext.PlaylistTracks
-                // where track is on requested playlist
-                .Where(pt => pt.PlaylistId == playlistId)
-                .Join(tracks, pt => pt.TrackId, t => t.TrackId, (pt, t) => new TrackWithPlaylistIndex
-                {
-                    Track = t,
-                    PlaylistIndex = pt.Index,
-                });
-        }
-
-        private static IQueryable<Picture> GetPicturesByStreamHashQuery(MediaInfoContext dbContext, int apiUserId, long hash)
-        {
-            return dbContext.Pictures
-                // where picture is requested picture
-                .Where(p => p.StreamHash == hash)
-                // where library containing picture file is accessible by user
-                .Where(p => !p.File.Library.IsAccessControlled || p.File.Library.LibraryUsers.Any(lu => lu.UserId == apiUserId));
-        }
-
-        private static IQueryable<ArtistStar> GetArtistStarsQuery(MediaInfoContext dbContext, int apiUserId)
-        {
-            return dbContext.ArtistStars
-                .Where(s => s.UserId == apiUserId);
-        }
-
-        private static IQueryable<AlbumStar> GetAlbumStarsQuery(MediaInfoContext dbContext, int apiUserId)
-        {
-            return dbContext.AlbumStars
-                .Where(s => s.UserId == apiUserId);
-        }
-
-        private static IQueryable<TrackStar> GetTrackStarsQuery(MediaInfoContext dbContext, int apiUserId)
-        {
-            return dbContext.TrackStars
-                .Where(s => s.UserId == apiUserId);
-        }
-
-        private static IQueryable<ArtistIdWithAlbumsCount> GetArtistIdsWithAlbumsCountQuery(MediaInfoContext dbContext, IQueryable<Track> tracksQuery)
-        {
-            return dbContext.Albums
-                // find album artist and album of tracks (excludes artists without albums with
-                // tracks)
-                .Join(tracksQuery, a => a.AlbumId, t => t.AlbumId, (a, t) => new
-                {
-                    a.ArtistId,
-                    t.AlbumId,
-                })
-                .Distinct()
-                .GroupBy(e => e.ArtistId)
-                // count albums
-                .Select(grouping => new ArtistIdWithAlbumsCount
-                {
-                    ArtistId = grouping.Key,
-                    AlbumsCount = grouping.Count(),
-                });
-        }
-
-        private static IQueryable<AlbumIdWithTracksCount> GetAlbumIdsWithTracksCountQuery(MediaInfoContext dbContext, IQueryable<Track> tracksQuery)
-        {
-            return dbContext.Albums
-                // find album tracks (excludes albums without tracks)
-                .Join(tracksQuery, a => a.AlbumId, t => t.AlbumId, (a, t) => new
-                {
-                    a.AlbumId,
-                    TrackDuration = t.Duration ?? 0,
-                })
-                .GroupBy(e => e.AlbumId)
-                // count album tracks and compute album duration
-                .Select(grouping => new AlbumIdWithTracksCount
-                {
-                    AlbumId = grouping.Key,
-                    TracksCount = grouping.Count(),
-                    Duration = grouping.Sum(e => e.TrackDuration),
-                });
-        }
-
-        private static IQueryable<PlaylistIdWithTracksCount> GetPlaylistIdsWithTracksCountQuery(MediaInfoContext dbContext, IQueryable<Track> tracksQuery)
-        {
-            return dbContext.Playlists
-                // find playlist tracks (includes playlists without tracks)
-                .GroupJoin(dbContext.PlaylistTracks, p => p.PlaylistId, pt => pt.PlaylistId, (p, pts) => new
-                {
-                    p.PlaylistId,
-                    PlaylistTracks = pts,
-                })
-                .SelectMany(e => e.PlaylistTracks.DefaultIfEmpty(), (e, pt) => new
-                {
-                    e.PlaylistId,
-                    pt.TrackId,
-                })
-                .GroupJoin(tracksQuery, e => e.TrackId, t => t.TrackId, (e, ts) => new
-                {
-                    e.PlaylistId,
-                    Tracks = ts,
-                })
-                .SelectMany(e => e.Tracks.DefaultIfEmpty(), (e, t) => new
-                {
-                    e.PlaylistId,
-                    TrackOne = t != null ? 1 : 0,
-                    TrackDuration = t.Duration ?? 0,
-                })
-                .GroupBy(e => e.PlaylistId)
-                // count playlist tracks and compute playlist duration
-                .Select(grouping => new PlaylistIdWithTracksCount
-                {
-                    PlaylistId = grouping.Key,
-                    TracksCount = grouping.Sum(e => e.TrackOne),
-                    Duration = grouping.Sum(e => e.TrackDuration),
-                });
-        }
-
         internal sealed class TrackStreamInfo
         {
             public string DirectoryPath;
@@ -2493,32 +1949,6 @@ namespace Hypersonic
             public string DirectoryPath;
             public string FileName;
             public int StreamIndex;
-        }
-
-        private sealed class TrackWithPlaylistIndex
-        {
-            public Track Track;
-            public int PlaylistIndex;
-        }
-
-        private sealed class ArtistIdWithAlbumsCount
-        {
-            public int? ArtistId;
-            public int AlbumsCount;
-        }
-
-        private sealed class AlbumIdWithTracksCount
-        {
-            public int AlbumId;
-            public int TracksCount;
-            public float Duration;
-        }
-
-        private sealed class PlaylistIdWithTracksCount
-        {
-            public int PlaylistId;
-            public int TracksCount;
-            public float Duration;
         }
     }
 }
