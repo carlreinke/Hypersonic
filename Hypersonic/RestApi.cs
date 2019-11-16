@@ -32,6 +32,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using static Hypersonic.Ffmpeg.Helpers;
+using static Hypersonic.Helpers;
 using static Hypersonic.Subsonic.Helpers;
 using IOFile = System.IO.File;
 
@@ -1229,7 +1231,7 @@ namespace Hypersonic
                 case "mp3":
                 {
                     maxBitRate = maxBitRate == 0 ? 256_000 : Math.Min(Math.Max(32_000, maxBitRate), 320_000);
-                    arguments = MakeTranscoderArguments(track, filePath, maxBitRate, "mp3", "mp3", "mp3");
+                    arguments = MakeTranscoderArguments(track, filePath, maxBitRate, "mp3", "libmp3lame", "mp3");
                     break;
                 }
                 case "oga":
@@ -1261,7 +1263,7 @@ namespace Hypersonic
                     throw RestApiErrorException.GenericError("Specified value for 'format' is not supported.");
             }
 
-            context.Response.ContentType = GetContentTypeForSuffix(format);
+            context.Response.ContentType = GetContentType(format);
 
             using (var process = FfmpegTranscoder.Transcode(arguments))
             using (context.RequestAborted.Register(process.Abort))
@@ -1293,10 +1295,18 @@ namespace Hypersonic
                 int bitRate = useTrackBitRate ? track.BitRate.Value : maxBitRate;
 
                 arguments
-                    .Add("-c:a:0").Add(ffmpegCodec)
-                    .Add("-b:a:0").Add(bitRate.ToStringInvariant())
-                    .Add("-filter:a:0").Add(b => b
-                        .Append("volume=").Append(gain.ToStringInvariant()).Append("dB"));
+                    .Add("-c:a:0").Add(ffmpegCodec);
+                if (ffmpegCodec == "libmp3lame")
+                    arguments
+                        .Add("-q:a").Add(GetLibmp3lameQuality(bitRate).ToStringInvariant());
+                else if (ffmpegCodec == "libvorbis")
+                    arguments
+                        .Add("-q:a").Add(GetLibvorbisQuality(bitRate).ToStringInvariant());
+                else
+                    arguments
+                        .Add("-b:a:0").Add(bitRate.ToStringInvariant());
+                arguments
+                    .Add("-af:0").Add(b => b.Append("volume=").Append(gain.ToStringInvariant()).Append("dB"));
             }
 
             arguments

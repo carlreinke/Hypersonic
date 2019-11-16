@@ -18,6 +18,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using static Hypersonic.Helpers;
 
 namespace Hypersonic.Subsonic
 {
@@ -151,7 +152,7 @@ namespace Hypersonic.Subsonic
                 sizeSpecified = true,
                 contentType = default,  // not populated
                 suffix = Path.GetExtension(fileName).TrimStart('.'),
-                transcodedContentType = GetContentTypeForSuffix(transcodedSuffix),
+                transcodedContentType = GetContentType(transcodedSuffix),
                 transcodedSuffix = transcodedSuffix,
                 duration = (int)Math.Round(trackDuration ?? 0),
                 durationSpecified = trackDuration.HasValue,
@@ -573,24 +574,6 @@ namespace Hypersonic.Subsonic
                 originalHeight = song.originalHeight,
                 originalHeightSpecified = song.originalHeightSpecified,
             };
-        }
-
-        internal static string GetContentTypeForSuffix(string suffix)
-        {
-            switch (suffix)
-            {
-                case "mp3":
-                    return "audio/mpeg";
-                case "oga":
-                case "ogg":
-                    // https://wiki.xiph.org/index.php/MIMETypesCodecs
-                    return "audio/ogg; codecs=vorbis";
-                case "opus":
-                    // https://wiki.xiph.org/index.php/MIMETypesCodecs
-                    return "audio/ogg; codecs=opus";
-                default:
-                    throw new ArgumentException("Unexpected suffix.");
-            }
         }
     }
 }
