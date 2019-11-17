@@ -200,6 +200,18 @@ namespace Hypersonic
 
             await Console.Out.WriteLineAsync("Fixing up artists...".AsMemory(), cancellationToken).ConfigureAwait(false);
 
+            // Clear placeholder artist metadata.
+            await dbContext.Artists
+                .Where(a => a.Name == null)
+                .ForEachAwaitAsync(async artist =>
+                {
+                    artist.SortName = null;
+                    artist.Dirty = false;
+
+                    await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
+
+            // Determine artist metadata from tracks.
             await dbContext.Artists
                 .Where(a => a.Dirty)
                 .ForEachAwaitAsync(async artist =>
@@ -219,6 +231,21 @@ namespace Hypersonic
 
             await Console.Out.WriteLineAsync("Fixing up albums...".AsMemory(), cancellationToken).ConfigureAwait(false);
 
+            // Clear placeholder album metadata.
+            await dbContext.Albums
+                .Where(a => a.Title == null)
+                .ForEachAwaitAsync(async album =>
+                {
+                    album.CoverPictureId = null;
+                    album.GenreId = null;
+                    album.SortTitle = null;
+                    album.OriginalDate = null;
+                    album.Dirty = false;
+
+                    await dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
+
+            // Determine album metadata from tracks.
             await dbContext.Albums
                 .Where(a => a.Dirty)
                 .ForEachAwaitAsync(async album =>
