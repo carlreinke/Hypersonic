@@ -405,6 +405,7 @@ namespace Hypersonic
                             // find files for tracks
                             .Join(dbContext.Files, t => t.FileId, f => f.FileId, (t, f) => new
                             {
+                                LibraryPath = f.Library.Path,
                                 DirectoryPath = f.Directory.Path,
                                 FileName = f.Name,
                                 t.StreamIndex,
@@ -415,7 +416,7 @@ namespace Hypersonic
                         if (track == null)
                             goto nextTrack;
 
-                        string filePath = Path.Combine(track.DirectoryPath, track.FileName);
+                        string filePath = Path.Join(track.LibraryPath, track.DirectoryPath, track.FileName);
 
                         var decoderArguments = new ArgumentList()
                             .Add("-i").Add(filePath)

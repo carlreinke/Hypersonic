@@ -80,7 +80,7 @@ namespace Hypersonic
 
             app.UseStatusCodePages();
 
-            string uiPath = Path.Combine(AppContext.BaseDirectory, "ui");
+            string uiPath = Path.Join(AppContext.BaseDirectory, "ui");
             if (Directory.Exists(uiPath))
             {
                 var sharedOptions = new SharedOptions()

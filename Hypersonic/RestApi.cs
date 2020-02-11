@@ -1200,7 +1200,7 @@ namespace Hypersonic
 
             RestApiQueries.TrackStreamInfo track = await RestApiQueries.GetTrackStreamInfoAsync(dbContext, apiUserId, id, context.RequestAborted).ConfigureAwait(false);
 
-            string filePath = Path.Combine(track.DirectoryPath, track.FileName);
+            string filePath = Path.Join(track.LibraryPath, track.DirectoryPath, track.FileName);
             if (!IOFile.Exists(filePath))
                 throw RestApiErrorException.DataNotFoundError();
 
@@ -1326,7 +1326,7 @@ namespace Hypersonic
 
             RestApiQueries.TrackStreamInfo track = await RestApiQueries.GetTrackStreamInfoAsync(dbContext, apiUserId, id, context.RequestAborted).ConfigureAwait(false);
 
-            string filePath = Path.Combine(track.DirectoryPath, track.FileName);
+            string filePath = Path.Join(track.LibraryPath, track.DirectoryPath, track.FileName);
             if (!IOFile.Exists(filePath))
                 throw RestApiErrorException.DataNotFoundError();
 
@@ -1375,7 +1375,7 @@ namespace Hypersonic
 
             RestApiQueries.CoverArtStreamInfo picture = await RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, apiUserId, id, context.RequestAborted).ConfigureAwait(false);
 
-            string filePath = Path.Combine(picture.DirectoryPath, picture.FileName);
+            string filePath = Path.Join(picture.LibraryPath, picture.DirectoryPath, picture.FileName);
             if (!IOFile.Exists(filePath))
                 throw RestApiErrorException.DataNotFoundError();
 

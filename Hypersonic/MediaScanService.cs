@@ -189,7 +189,9 @@ namespace Hypersonic
                 .Where(d => d.ParentDirectory == null)
                 .ForEachAwaitAsync(async directory =>
                 {
-                    var directoryInfo = new DirectoryInfo(directory.Path);
+                    Debug.Assert(directory.Path.Length == 0);
+
+                    var directoryInfo = new DirectoryInfo(library.Path);
 
                     bool modified = await ScanDirectoryAsync(dbContext, directory, directoryInfo, force, cancellationToken).ConfigureAwait(false);
                     if (modified)
@@ -350,7 +352,7 @@ namespace Hypersonic
             bool modified = false;
 
             var newSubdirectoryInfos = directoryInfo.EnumerateDirectories()
-                .ToDictionary(d => d.FullName);
+                .ToDictionary(d => Path.Join(directory.Path, d.Name));
 
             var staleSubdirectories = new List<Data.Directory>();
 
@@ -372,16 +374,19 @@ namespace Hypersonic
             dbContext.Directories.RemoveRange(staleSubdirectories);
             staleSubdirectories.Clear();
 
-            foreach (var subdirectoryInfo in newSubdirectoryInfos.Values)
+            foreach (var subdirectoryInfoEntry in newSubdirectoryInfos)
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
+
+                string subdirectoryPath = subdirectoryInfoEntry.Key;
+                var subdirectoryInfo = subdirectoryInfoEntry.Value;
 
                 var subdirectory = new Data.Directory()
                 {
                     Library = directory.Library,
                     ParentDirectory = directory,
-                    Path = subdirectoryInfo.FullName,
+                    Path = subdirectoryPath,
                     Added = DateTime.UtcNow,
                 };
                 await dbContext.Directories.AddAsync(subdirectory, cancellationToken).ConfigureAwait(false);
@@ -417,16 +422,19 @@ namespace Hypersonic
             dbContext.Files.RemoveRange(staleFiles);
             staleFiles.Clear();
 
-            foreach (var fileInfo in fileInfos.Values)
+            foreach (var fileInfoEntry in fileInfos)
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
+
+                string fileName = fileInfoEntry.Key;
+                var fileInfo = fileInfoEntry.Value;
 
                 var file = new Data.File()
                 {
                     Library = directory.Library,
                     Directory = directory,
-                    Name = fileInfo.Name,
+                    Name = fileName,
                     Size = 0,
                     ModificationTime = default,
                     FormatName = string.Empty,

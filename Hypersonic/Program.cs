@@ -59,7 +59,7 @@ namespace Hypersonic
                 {
                     localAppDataPath = ".";
                 }
-                return IOPath.Combine(localAppDataPath, _defaultDatabaseFileName);
+                return IOPath.Join(localAppDataPath, _defaultDatabaseFileName);
             }
         }
 
@@ -607,12 +607,12 @@ namespace Hypersonic
                     .Where(d => d.ParentDirectoryId == null);
 
                 var libraries = dbContext.Libraries
-                    .Join(rootDirectories, l => l.LibraryId, d => d.LibraryId, (l, d) => new
+                    .Select(l => new
                     {
                         l.Name,
                         l.IsAccessControlled,
                         UserCount = l.LibraryUsers.Count(),
-                        d.Path,
+                        l.Path,
                     })
                     .AsEnumerable()
                     .Select(e => new
@@ -693,6 +693,7 @@ namespace Hypersonic
                     var library = new Library
                     {
                         Name = name,
+                        Path = path,
                         IsAccessControlled = isAccessControlled,
                         ContentModified = DateTime.UtcNow,
                     };
@@ -702,7 +703,7 @@ namespace Hypersonic
                     {
                         Library = library,
                         ParentDirectory = null,
-                        Path = path,
+                        Path = string.Empty,
                     };
                     dbContext.Directories.Add(directory);
 

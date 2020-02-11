@@ -1536,6 +1536,7 @@ namespace Hypersonic
                 // find files for tracks
                 .Join(dbContext.Files, t => t.FileId, f => f.FileId, (t, f) => new TrackStreamInfo
                 {
+                    LibraryPath = f.Library.Path,
                     DirectoryPath = f.Directory.Path,
                     FileName = f.Name,
                     FormatName = f.FormatName,
@@ -1561,6 +1562,7 @@ namespace Hypersonic
                 // find files for pictures
                 .Join(dbContext.Files, p => p.FileId, f => f.FileId, (p, f) => new CoverArtStreamInfo
                 {
+                    LibraryPath = f.Library.Path,
                     DirectoryPath = f.Directory.Path,
                     FileName = f.Name,
                     StreamIndex = p.StreamIndex,
@@ -1934,6 +1936,7 @@ namespace Hypersonic
 
         internal sealed class TrackStreamInfo
         {
+            public string LibraryPath;
             public string DirectoryPath;
             public string FileName;
             public string FormatName;
@@ -1946,6 +1949,7 @@ namespace Hypersonic
 
         internal class CoverArtStreamInfo
         {
+            public string LibraryPath;
             public string DirectoryPath;
             public string FileName;
             public int StreamIndex;

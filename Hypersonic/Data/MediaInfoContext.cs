@@ -287,6 +287,8 @@ namespace Hypersonic.Data
 
         [Required]
         public string Name { get; set; }
+        [Required]
+        public string Path { get; set; }
         public bool IsAccessControlled { get; set; }
         public DateTime ContentModified { get; set; }
 

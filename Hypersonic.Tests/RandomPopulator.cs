@@ -54,6 +54,7 @@ namespace Hypersonic.Tests
             var library = new Library
             {
                 Name = RandomString(10),
+                Path = RandomString(10),
                 IsAccessControlled = accessControlled,
                 ContentModified = RandomDateTime(),
             };
@@ -78,7 +79,7 @@ namespace Hypersonic.Tests
             {
                 Library = library,
                 ParentDirectory = null,
-                Path = RandomString(10),
+                Path = string.Empty,
                 Added = RandomDateTime(),
             };
             _dbContext.Directories.Add(directory);

@@ -38,5 +38,7 @@ namespace Hypersonic
         public static string ToStringInvariant(this double value, string format) => value.ToString(format, CultureInfo.InvariantCulture);
 
         public static string ToStringInvariant(this double value) => value.ToString(CultureInfo.InvariantCulture);
+
+        public static string ToStringInvariant(this char value) => value.ToString(CultureInfo.InvariantCulture);
     }
 }
