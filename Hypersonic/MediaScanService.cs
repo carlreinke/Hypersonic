@@ -76,8 +76,6 @@ namespace Hypersonic
         {
             _serviceCancellationTokenSource.Cancel();
             _serviceCancellationTokenSource.Dispose();
-
-            StopScanAsync().Wait();
         }
 
         public async Task ScanAsync(bool force = false)
@@ -159,6 +157,8 @@ namespace Hypersonic
         private void HandleApplicationStopping()
         {
             _serviceCancellationTokenSource.Cancel();
+
+            StopScanAsync().GetAwaiter().GetResult();
         }
 
         private async Task ScanLibrariesAsync(bool force, CancellationToken cancellationToken)
