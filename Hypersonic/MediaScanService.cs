@@ -135,7 +135,16 @@ namespace Hypersonic
             }
 
             if (scanTask != null)
-                await scanTask.ConfigureAwait(false);
+            {
+                try
+                {
+                    await scanTask.ConfigureAwait(false);
+                }
+                catch (TaskCanceledException)
+                {
+                    // Expected.
+                }
+            }
         }
 
         private void HandleApplicationStarted()
