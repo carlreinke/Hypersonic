@@ -186,6 +186,11 @@ namespace Hypersonic
                         name: "name",
                         description: "Name of the music library to add.");
 
+                    var pathOption = modifyCommand.Option(
+                        template: "--path <path>",
+                        description: "Set the path of the music library.",
+                        optionType: CommandOptionType.SingleValue);
+
                     var accessControlOption = modifyCommand.Option(
                         template: "--access-control <yes/no>",
                         description: "Set whether to enable access control on the music library.",
@@ -200,6 +205,7 @@ namespace Hypersonic
                         command: modifyCommand,
                         databaseOption: databaseOption,
                         nameArgument: nameArgument,
+                        pathOption: pathOption,
                         accessControlOption: accessControlOption,
                         renameOption: renameOption) ?? 0);
                 });
@@ -662,14 +668,7 @@ namespace Hypersonic
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path))
                 return ShowHelp(command) ?? -1;
 
-            string originalPath = path;
-
-            path = IOPath.GetFullPath(path);
-            if (IOPath.GetFileName(path).Length == 0)
-                path = IOPath.GetDirectoryName(path) ?? path;
-
-            if (!IODirectory.Exists(path))
-                throw new CommandAbortException($"The path '{originalPath}' does not exist or is not a directory.");
+            path = CheckDirectory(path);
 
             bool isAccessControlled = accessControlOption.HasValue();
 
@@ -716,7 +715,7 @@ namespace Hypersonic
             return null;
         }
 
-        private static int? ModifyLibrary(CommandLineApplication command, CommandOption databaseOption, CommandArgument nameArgument, CommandOption accessControlOption, CommandOption renameOption)
+        private static int? ModifyLibrary(CommandLineApplication command, CommandOption databaseOption, CommandArgument nameArgument, CommandOption pathOption, CommandOption accessControlOption, CommandOption renameOption)
         {
             if (!databaseOption.HasValue())
                 databaseOption.Values.Add(DefaultDatabasePath);
@@ -725,6 +724,15 @@ namespace Hypersonic
 
             if (string.IsNullOrEmpty(name))
                 return ShowHelp(command) ?? -1;
+
+            string path = pathOption.Value();
+            if (pathOption.HasValue())
+            {
+                if (string.IsNullOrEmpty(path))
+                    throw new CommandAbortException($"Invalid path '{path}'.");
+
+                path = CheckDirectory(path);
+            }
 
             bool isAccessControlled = default;
             if (accessControlOption.HasValue())
@@ -753,6 +761,9 @@ namespace Hypersonic
 
                     if (library == null)
                         throw new CommandAbortException($"Library '{name}' does not exist.");
+
+                    if (pathOption.HasValue())
+                        library.Path = path;
 
                     if (accessControlOption.HasValue())
                         library.IsAccessControlled = isAccessControlled;
@@ -1339,6 +1350,20 @@ namespace Hypersonic
         private static bool TryParseNonNegativeInt32(string s, out int value)
         {
             return int.TryParse(s, NumberStyles.None, CultureInfo.InvariantCulture, out value);
+        }
+
+        private static string CheckDirectory(string path)
+        {
+            string originalPath = path;
+
+            path = IOPath.GetFullPath(path);
+            if (IOPath.GetFileName(path).Length == 0)
+                path = IOPath.GetDirectoryName(path) ?? path;
+
+            if (!IODirectory.Exists(path))
+                throw new CommandAbortException($"The path '{originalPath}' does not exist or is not a directory.");
+
+            return path;
         }
 
         private static string GeneratePassword(int bits = 48)
