@@ -45,7 +45,7 @@ namespace Hypersonic.Ffmpeg
             }
         }
 
-        public static Task<byte[]> HashAsync(string filePath, int streamIndex, string hashAlgorithm = "sha256", CancellationToken cancellationToken = default)
+        public static async Task<byte[]> HashAsync(string filePath, int streamIndex, string hashAlgorithm = "sha256", CancellationToken cancellationToken = default)
         {
             using (var hashProcess = CreateHashProcess(filePath, streamIndex, hashAlgorithm))
             using (cancellationToken.Register(hashProcess.Abort))
@@ -55,7 +55,7 @@ namespace Hypersonic.Ffmpeg
 
                 try
                 {
-                    return ReadHashAsync(hashStream, cancellationToken);
+                    return await ReadHashAsync(hashStream, cancellationToken).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
