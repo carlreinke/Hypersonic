@@ -539,7 +539,7 @@ namespace Hypersonic
                 string certificateValue = certificateOption.Value();
                 try
                 {
-                    certificate = new X509Certificate2(certificateValue);
+                    certificate = new X509Certificate2(certificateValue, (string)null, X509KeyStorageFlags.EphemeralKeySet);
                     if (!certificate.HasPrivateKey)
                         throw new CommandAbortException($"No private key included in certificate '{certificateValue}'.");
                 }
