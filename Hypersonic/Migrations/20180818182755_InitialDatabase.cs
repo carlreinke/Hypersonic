@@ -1,5 +1,6 @@
-﻿using System;
+﻿#pragma warning disable IDE0058
 using Microsoft.EntityFrameworkCore.Migrations;
+using System;
 
 namespace Hypersonic.Migrations
 {
