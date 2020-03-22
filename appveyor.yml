@@ -9,10 +9,14 @@ dotnet_csproj:
   file: '**\*.csproj'
   assembly_version: 1.0.0.0
   file_version: '{version}'
-  informational_version: '{version}-$(APPVEYOR_REPO_COMMIT)'
-before_build:
-- pwsh: nuget restore
+  informational_version: '{version}+$(APPVEYOR_REPO_COMMIT)'
 build:
   publish_core_console: true
   parallel: true
   verbosity: minimal
+before_build:
+- pwsh: nuget restore -Verbosity quiet
+- pwsh: dotnet tool install --global Codecov.Tool --version 1.7.1
+test_script:
+- pwsh: dotnet test -c $Env:CONFIGURATION /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=bin\$Env:CONFIGURATION\coverage.xml
+- pwsh: codecov --file *\bin\$Env:CONFIGURATION\coverage.xml --flag $Env:CONFIGURATION

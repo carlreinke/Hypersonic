@@ -1,7 +1,7 @@
 # Hypersonic
 A music streaming server that provides a subset of the Subsonic API.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/3ssoa3ryd0fbyae2/branch/master?svg=true)](https://ci.appveyor.com/project/carlreinke/hypersonic/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/3ssoa3ryd0fbyae2/branch/master?svg=true)](https://ci.appveyor.com/project/carlreinke/hypersonic/branch/master) [![Test coverage](https://codecov.io/gh/carlreinke/Hypersonic/branch/master/graph/badge.svg)](https://codecov.io/gh/carlreinke/Hypersonic)
 
 ## Features
 
