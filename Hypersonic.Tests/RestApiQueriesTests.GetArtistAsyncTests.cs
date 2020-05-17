@@ -397,7 +397,8 @@ namespace Hypersonic.Tests
                     var result = RestApiQueries.GetArtistAsync(dbContext, user.UserId, artist.ArtistId, CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.Equal(1, result.albumCount);
-                    Assert.Single(result.album);
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                 }
             }
 
@@ -425,7 +426,8 @@ namespace Hypersonic.Tests
                     var result = RestApiQueries.GetArtistAsync(dbContext, user.UserId, artist.ArtistId, CancellationToken.None).GetAwaiter().GetResult();
 
                     Assert.Equal(1, result.albumCount);
-                    Assert.Single(result.album);
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                 }
             }
 

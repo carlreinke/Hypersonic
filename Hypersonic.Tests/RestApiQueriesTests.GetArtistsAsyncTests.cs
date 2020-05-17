@@ -272,7 +272,7 @@ namespace Hypersonic.Tests
             }
 
             [Fact]
-            public static void GetArtistsAsync_AlbumHasInaccessibleTrack_AlbumIsNotCounted()
+            public static void GetArtistsAsync_AlbumHasNoAccessibleTrack_AlbumIsNotCounted()
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -328,7 +328,8 @@ namespace Hypersonic.Tests
 
                     var result = RestApiQueries.GetArtistsAsync(dbContext, user.UserId, null, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Single(result.index.SelectMany(i => i.artist));
+                    var resultArtist = Assert.Single(result.index.SelectMany(i => i.artist));
+                    Assert.Equal("r" + artist.ArtistId, resultArtist.id);
                 }
             }
 
@@ -355,7 +356,8 @@ namespace Hypersonic.Tests
 
                     var result = RestApiQueries.GetArtistsAsync(dbContext, user.UserId, null, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Single(result.index.SelectMany(i => i.artist));
+                    var resultArtist = Assert.Single(result.index.SelectMany(i => i.artist));
+                    Assert.Equal("r" + artist.ArtistId, resultArtist.id);
                 }
             }
 

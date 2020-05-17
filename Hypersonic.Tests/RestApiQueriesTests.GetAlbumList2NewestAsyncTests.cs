@@ -333,7 +333,8 @@ namespace Hypersonic.Tests
 
                     var result = RestApiQueries.GetAlbumList2NewestAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Single(result.album);
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                 }
             }
 
@@ -360,7 +361,8 @@ namespace Hypersonic.Tests
 
                     var result = RestApiQueries.GetAlbumList2NewestAsync(dbContext, user.UserId, null, 0, 10, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.Single(result.album);
+                    var resultAlbum = Assert.Single(result.album);
+                    Assert.Equal("a" + album.AlbumId, resultAlbum.id);
                 }
             }
 
