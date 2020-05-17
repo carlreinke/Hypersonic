@@ -34,6 +34,8 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.MusicFolders> GetMusicFoldersAsync(MediaInfoContext dbContext, int apiUserId, CancellationToken cancellationToken)
         {
+            var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+
             Subsonic.MusicFolder[] musicFolders = await dbContext.Libraries
                 .WhereIsAccessibleBy(apiUserId)
                 .Select(l => new
@@ -42,6 +44,7 @@ namespace Hypersonic
                     l.Name,
                 })
                 .AsAsyncEnumerable()
+                .OrderBy(e => e.Name, comparer)
                 .Select(l => new Subsonic.MusicFolder()
                 {
                     id = l.LibraryId,
@@ -57,16 +60,26 @@ namespace Hypersonic
 
         internal static async Task<Subsonic.Genres> GetGenresAsync(MediaInfoContext dbContext, int apiUserId, CancellationToken cancellationToken)
         {
+            var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+
             IQueryable<Track> tracksQuery = dbContext.Tracks
                 .WhereIsAccessibleBy(apiUserId);
 
             Subsonic.Genre[] genres = await dbContext.Genres
                 .WithCounts(dbContext, tracksQuery)
-                .Select(e => CreateGenre(
+                .Select(e => new
+                {
                     e.Genre.Name,
                     e.AlbumsCount,
+                    e.TracksCount,
+                })
+                .AsAsyncEnumerable()
+                .OrderBy(e => e.Name, comparer)
+                .Select(e => CreateGenre(
+                    e.Name,
+                    e.AlbumsCount,
                     e.TracksCount))
-                .ToArrayAsync(cancellationToken).ConfigureAwait(false);
+                .ToArray(cancellationToken).ConfigureAwait(false);
 
             return new Subsonic.Genres()
             {
