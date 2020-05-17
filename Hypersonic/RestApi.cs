@@ -2137,7 +2137,11 @@ namespace Hypersonic
 
             int index = span.IndexOf(separatorSpan, StringComparison.Ordinal);
             if (index == -1)
-                index = span.Length;
+            {
+                majorVersion = default;
+                minorVersion = default;
+                return false;
+            }
             var majorVersionSpan = span.Slice(0, index);
 
             span = span.Slice(index + separatorSpan.Length);
