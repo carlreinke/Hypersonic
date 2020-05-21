@@ -423,6 +423,7 @@ namespace Hypersonic.Tests
             [Theory]
             [InlineData("#", new[] { "", "0", "🕴" })]
             [InlineData("A", new[] { "A", "a" })]
+            [InlineData("ǲ", new[] { "Ǳ", "ǲ", "ǳ" })]
             [InlineData("𓂀", new[] { "𓂀" })]
             [InlineData("\uD801\uDC00", new[] { "\uD801\uDC00",
                                                 "\uD801\uDC28", })]

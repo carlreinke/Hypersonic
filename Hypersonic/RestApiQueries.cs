@@ -90,6 +90,7 @@ namespace Hypersonic
         internal static async Task<Subsonic.ArtistsID3> GetArtistsAsync(MediaInfoContext dbContext, int apiUserId, int? musicFolderId, CancellationToken cancellationToken)
         {
             var comparer = CultureInfo.CurrentCulture.CompareInfo.GetStringComparer(CompareOptions.IgnoreCase);
+            var textInfo = CultureInfo.CurrentCulture.TextInfo;
 
             IQueryable<Track> tracksQuery = dbContext.Tracks
                 .WhereIsAccessibleBy(apiUserId, musicFolderId);
@@ -115,7 +116,7 @@ namespace Hypersonic
                     {
                         string t = StringInfo.GetNextTextElement(name).Normalize();
                         if (t.Length > 0 && char.IsLetter(t, 0))
-                            return t.ToUpper(CultureInfo.CurrentCulture);
+                            return textInfo.ToTitleCase(t);
                     }
                     return "#";
                 })
