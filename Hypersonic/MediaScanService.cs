@@ -1045,7 +1045,7 @@ namespace Hypersonic
             if (tags.TryGetValue("R128_ALBUM_GAIN", out value))  // Opus
             {
                 if (TryParseShort(value, out short gain))
-                    return gain / 256.0f;
+                    return gain / 256.0f + 5;  // R128 reference level is 5 dB lower than ReplayGain.
 
                 Debug.WriteLine("Failed to parse album R128 gain '{0}'.", new[] { value });
             }
