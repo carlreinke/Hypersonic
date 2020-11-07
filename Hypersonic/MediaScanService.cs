@@ -33,13 +33,18 @@ namespace Hypersonic
 {
     internal sealed class MediaScanService : IDisposable
     {
-        private readonly CancellationTokenSource _serviceCancellationTokenSource = new CancellationTokenSource();
-
         private readonly TimeSpan _rescanInterval = TimeSpan.FromHours(24);
 
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
+        // Lock guards access to _scanCancellationTokenSource and _scanTask.
         private readonly object _scanTaskLock = new object();
 
         private readonly IServiceScopeFactory _serviceScopeFactory;
+
+        private bool _disposed;
+
+        private Task _serviceTask;
 
         private CancellationTokenSource _scanCancellationTokenSource;
 
@@ -57,8 +62,8 @@ namespace Hypersonic
                 var lifetime = scope.ServiceProvider.GetService<IApplicationLifetime>();
                 if (lifetime != null)
                 {
-                    lifetime.ApplicationStarted.Register(HandleApplicationStarted);
-                    lifetime.ApplicationStopping.Register(HandleApplicationStopping);
+                    _ = lifetime.ApplicationStarted.Register(HandleApplicationStarted);
+                    _ = lifetime.ApplicationStopping.Register(HandleApplicationStopping);
                 }
             }
         }
@@ -67,6 +72,8 @@ namespace Hypersonic
         {
             get
             {
+                ThrowIfDisposed();
+
                 lock (_scanTaskLock)
                     return _scanTask != null && !_scanTask.IsCompleted;
             }
@@ -74,12 +81,18 @@ namespace Hypersonic
 
         public void Dispose()
         {
-            _serviceCancellationTokenSource.Cancel();
-            _serviceCancellationTokenSource.Dispose();
+            if (_disposed)
+                return;
+
+            _cancellationTokenSource.Dispose();
+
+            _disposed = true;
         }
 
         public async Task ScanAsync(bool force = false)
         {
+            ThrowIfDisposed();
+
         again:
             await StopScanAsync().ConfigureAwait(false);
 
@@ -87,11 +100,12 @@ namespace Hypersonic
 
             lock (_scanTaskLock)
             {
-                if (_scanTask != null && !_scanTask.IsCompleted)
+                if (_scanCancellationTokenSource != null)
                     goto again;
 
-                Debug.Assert(_scanCancellationTokenSource == null);
-                _scanCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_serviceCancellationTokenSource.Token);
+                Debug.Assert(_scanTask == null);
+
+                _scanCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.Token);
 
                 var cancellationToken = _scanCancellationTokenSource.Token;
 
@@ -103,12 +117,14 @@ namespace Hypersonic
                     }
                     catch (OperationCanceledException)
                     {
+                        Debug.Assert(cancellationToken.IsCancellationRequested);
                         throw;
                     }
                     catch (Exception ex)
                     {
                         Console.Error.WriteLine("Exception occurred during media scan:");
                         Console.Error.WriteLine(ex.ToString());
+                        Debugger.Break();
                     }
                 }, cancellationToken);
 
@@ -120,43 +136,70 @@ namespace Hypersonic
 
         public async Task StopScanAsync()
         {
+            ThrowIfDisposed();
+
             Task scanTask;
 
             lock (_scanTaskLock)
             {
-                if (_scanCancellationTokenSource != null)
-                {
-                    _scanCancellationTokenSource.Cancel();
-                    _scanCancellationTokenSource.Dispose();
-                    _scanCancellationTokenSource = null;
-                }
+                if (_scanCancellationTokenSource == null)
+                    return;
+
+                _scanCancellationTokenSource.Cancel();
 
                 scanTask = _scanTask;
             }
 
-            if (scanTask != null)
+            try
             {
-                try
-                {
-                    await scanTask.ConfigureAwait(false);
-                }
-                catch (TaskCanceledException)
-                {
-                    // Expected.
-                }
+                await scanTask.ConfigureAwait(false);
             }
+            catch (OperationCanceledException)
+            {
+                // Expected.
+            }
+
+            lock (_scanTaskLock)
+            {
+                if (_scanCancellationTokenSource == null)
+                    return;
+
+                Debug.Assert(_scanTask == scanTask);
+
+                _scanCancellationTokenSource.Dispose();
+                _scanCancellationTokenSource = null;
+
+                _scanTask = null;
+            }
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(typeof(MediaScanService).FullName);
         }
 
         private void HandleApplicationStarted()
         {
-            var cancellationToken = _serviceCancellationTokenSource.Token;
+            ThrowIfDisposed();
 
-            Task.Run(async () =>
+            var cancellationToken = _cancellationTokenSource.Token;
+
+            _serviceTask = Task.Run(async () =>
             {
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     if (!IsScanning)
-                        await ScanAsync().ConfigureAwait(false);
+                    {
+                        try
+                        {
+                            await ScanAsync().ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            cancellationToken.ThrowIfCancellationRequested();
+                        }
+                    }
 
                     await Task.Delay(_rescanInterval, cancellationToken).ConfigureAwait(false);
                 }
@@ -165,7 +208,18 @@ namespace Hypersonic
 
         private void HandleApplicationStopping()
         {
-            _serviceCancellationTokenSource.Cancel();
+            ThrowIfDisposed();
+
+            _cancellationTokenSource.Cancel();
+
+            try
+            {
+                _serviceTask.GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected.
+            }
 
             StopScanAsync().GetAwaiter().GetResult();
         }
