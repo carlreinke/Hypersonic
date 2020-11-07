@@ -20,7 +20,7 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace Hypersonic.Data
 {
-    internal class MediaInfoContextFactory : IDesignTimeDbContextFactory<MediaInfoContext>
+    internal sealed class MediaInfoContextFactory : IDesignTimeDbContextFactory<MediaInfoContext>
     {
         public MediaInfoContext CreateDbContext(string[] args)
         {
