@@ -30,21 +30,21 @@ namespace Hypersonic
 {
     internal sealed class JukeboxService : IDisposable
     {
+        private readonly object _lock = new object();
+
         private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         private readonly AutoResetEvent _playEvent = new AutoResetEvent(false);
 
-        private readonly object _lock = new object();
+        private readonly List<int> _playlist = new List<int>();
 
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        private Thread _thread;
+        private readonly Thread _thread;
 
         private bool _disposed;
 
         private bool _playing;
-
-        private readonly List<int> _playlist = new List<int>();
 
         private int _playlistIndex = -1;
 
@@ -61,39 +61,43 @@ namespace Hypersonic
 
             _serviceScopeFactory = serviceScopeFactory;
 
-            lifetime.ApplicationStarted.Register(OnStarted);
-            lifetime.ApplicationStopping.Register(OnStopping);
-        }
+            _thread = new Thread(PlaybackThreadStart)
+            {
+                Name = "Jukebox playback",
+                Priority = ThreadPriority.AboveNormal,
+            };
 
-        ~JukeboxService()
-        {
-            Dispose(disposing: false);
+            _ = lifetime.ApplicationStarted.Register(HandleApplicationStarted);
+            _ = lifetime.ApplicationStopping.Register(HandleApplicationStopping);
         }
 
         public void Dispose()
         {
-            Dispose(disposing: true);
+            if (_disposed)
+                return;
 
-            GC.SuppressFinalize(this);
+            _cancellationTokenSource.Dispose();
+
+            _playEvent.Dispose();
+
+            _disposed = true;
         }
 
         public void StartPlayback()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(JukeboxService));
+            ThrowIfDisposed();
 
             lock (_lock)
             {
                 _playing = true;
 
-                _playEvent.Set();
+                _ = _playEvent.Set();
             }
         }
 
         public void PausePlayback()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(JukeboxService));
+            ThrowIfDisposed();
 
             lock (_lock)
             {
@@ -103,8 +107,7 @@ namespace Hypersonic
 
         public void StopPlayback()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(JukeboxService));
+            ThrowIfDisposed();
 
             lock (_lock)
             {
@@ -121,6 +124,8 @@ namespace Hypersonic
             if (trackPosition < 0)
                 throw new ArgumentOutOfRangeException(nameof(trackPosition));
 
+            ThrowIfDisposed();
+
             lock (_lock)
             {
                 if (playlistIndex >= _playlist.Count)
@@ -135,6 +140,8 @@ namespace Hypersonic
         {
             if (trackIds == null)
                 throw new ArgumentNullException(nameof(trackIds));
+
+            ThrowIfDisposed();
 
             lock (_lock)
             {
@@ -168,6 +175,8 @@ namespace Hypersonic
             if (trackIds == null)
                 throw new ArgumentNullException(nameof(trackIds));
 
+            ThrowIfDisposed();
+
             lock (_lock)
             {
                 _playlist.AddRange(trackIds);
@@ -178,6 +187,8 @@ namespace Hypersonic
         {
             if (playlistIndex < 0)
                 throw new ArgumentOutOfRangeException(nameof(playlistIndex));
+
+            ThrowIfDisposed();
 
             lock (_lock)
             {
@@ -203,6 +214,8 @@ namespace Hypersonic
 
         public void ClearTracks()
         {
+            ThrowIfDisposed();
+
             lock (_lock)
             {
                 _playlist.Clear();
@@ -215,6 +228,8 @@ namespace Hypersonic
 
         public void ShuffleTracks()
         {
+            ThrowIfDisposed();
+
             var random = new Random();
 
             lock (_lock)
@@ -237,6 +252,8 @@ namespace Hypersonic
 
         public void SetGain(float gain)
         {
+            ThrowIfDisposed();
+
             lock (_lock)
             {
                 _gain = gain;
@@ -246,6 +263,8 @@ namespace Hypersonic
 
         public JukeboxState GetState()
         {
+            ThrowIfDisposed();
+
             lock (_lock)
             {
                 return new JukeboxState(
@@ -258,6 +277,8 @@ namespace Hypersonic
 
         public JukeboxState GetState(out int[] trackIds)
         {
+            ThrowIfDisposed();
+
             lock (_lock)
             {
                 trackIds = _playlist.ToArray();
@@ -291,42 +312,22 @@ namespace Hypersonic
             return after - index < index - before ? after : before;
         }
 
-        private void Dispose(bool disposing)
+        private void ThrowIfDisposed()
         {
             if (_disposed)
-                return;
-
-            if (_cancellationTokenSource != null)
-                _cancellationTokenSource.Cancel();
-
-            if (disposing)
-            {
-                _cancellationTokenSource.Dispose();
-                _playEvent.Dispose();
-            }
-
-            _disposed = true;
+                throw new ObjectDisposedException(typeof(JukeboxService).FullName);
         }
 
-        private void OnStarted()
+        private void HandleApplicationStarted()
         {
-            _thread = new Thread(PlaybackThreadStart)
-            {
-                Name = "Jukebox playback",
-                Priority = ThreadPriority.AboveNormal,
-            };
             _thread.Start(new object[] { _cancellationTokenSource.Token });
         }
 
-        private void OnStopping()
+        private void HandleApplicationStopping()
         {
             _cancellationTokenSource.Cancel();
 
-            if (_thread != null)
-            {
-                _thread.Join();
-                _thread = null;
-            }
+            _thread.Join();
         }
 
         private void PlaybackThreadStart(object obj)
@@ -366,7 +367,7 @@ namespace Hypersonic
                             break;
                     }
 
-                    WaitHandle.WaitAny(new[] { cancellationToken.WaitHandle, _playEvent });
+                    _ = WaitHandle.WaitAny(new[] { cancellationToken.WaitHandle, _playEvent });
                 }
 
                 using (var playerProcess = new FfmpegProcess("ffplay", playerArguments))
@@ -479,6 +480,7 @@ namespace Hypersonic
                                 {
                                     int writeCount = samplesSpan.Length * sizeof(float);
                                     playerStream.Write(buffer.Slice(bufferOffset, writeCount));
+                                    playerStream.Flush();
                                     bufferOffset += writeCount;
                                     bufferCount -= writeCount;
                                 }
