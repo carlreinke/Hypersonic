@@ -33,7 +33,6 @@ namespace Hypersonic
         /// Timing analysis of this method reveals the length of <paramref name="untrusted"/>.  Do
         /// not provide a secret in <paramref name="untrusted"/>.
         /// </remarks>
-        [MethodImpl(MethodImplOptions.NoOptimization)]
         public static bool ConstantTimeEquals(ReadOnlySpan<byte> untrusted, ReadOnlySpan<byte> secret) => ConstantTimeMismatch(untrusted, secret) == 0;
 
         /// <summary>
@@ -48,10 +47,9 @@ namespace Hypersonic
         /// Timing analysis of this method reveals the length of <paramref name="untrusted"/>.  Do
         /// not provide a secret in <paramref name="untrusted"/>.
         /// </remarks>
-        [MethodImpl(MethodImplOptions.NoOptimization)]
         public static bool ConstantTimeEquals(ReadOnlySpan<char> untrusted, ReadOnlySpan<char> secret) => ConstantTimeMismatch(untrusted, secret) == 0;
 
-        [MethodImpl(MethodImplOptions.NoOptimization)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static byte ConstantTimeMismatch(ReadOnlySpan<byte> untrusted, ReadOnlySpan<byte> secret)
         {
             int minLength = untrusted.Length < secret.Length ? untrusted.Length : secret.Length;
@@ -75,7 +73,7 @@ namespace Hypersonic
             return mismatch;
         }
 
-        [MethodImpl(MethodImplOptions.NoOptimization)]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static char ConstantTimeMismatch(ReadOnlySpan<char> untrusted, ReadOnlySpan<char> secret)
         {
             int minLength = untrusted.Length < secret.Length ? untrusted.Length : secret.Length;
