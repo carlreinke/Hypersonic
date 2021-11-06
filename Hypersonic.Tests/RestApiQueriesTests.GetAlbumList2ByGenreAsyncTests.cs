@@ -53,7 +53,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, library.LibraryId + 1, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult());
 
@@ -89,7 +89,7 @@ namespace Hypersonic.Tests
                     var otherFile = random.AddFile(otherDirectory);
                     var otherTrack = random.AddTrack(otherFile, artist, album);
                     var otherTrackGenre = random.AddTrackGenre(otherTrack, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, library.LibraryId, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -130,7 +130,7 @@ namespace Hypersonic.Tests
                         tracks.Add(track);
                         var trackGenre = random.AddTrackGenre(track, genre);
                     }
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     albums = albums
                         .OrderBy(a => a.SortTitle ?? a.Title, _stringComparer)
@@ -188,7 +188,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name + "!", CancellationToken.None).GetAwaiter().GetResult();
 
@@ -219,7 +219,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -251,7 +251,7 @@ namespace Hypersonic.Tests
                     var trackArtist = random.AddArtist();
                     var track = random.AddTrack(file, trackArtist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -281,7 +281,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -316,7 +316,7 @@ namespace Hypersonic.Tests
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, accessibleAlbum);
                     var accessibleTrackGenre = random.AddTrackGenre(accessibleTrack, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -351,7 +351,7 @@ namespace Hypersonic.Tests
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessibleTrack = random.AddTrack(accessibleFile, artist, album);
                     var accessibleTrackGenre = random.AddTrackGenre(accessibleTrack, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -383,7 +383,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -413,7 +413,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -443,7 +443,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -475,7 +475,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -507,7 +507,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -539,7 +539,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -570,7 +570,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackGenre = random.AddTrackGenre(track, genre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetAlbumList2ByGenreAsync(dbContext, user.UserId, null, 0, 10, genre.Name, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -619,7 +619,7 @@ namespace Hypersonic.Tests
                             var trackGenre = random.AddTrackGenre(track, genre);
                         }
                     }
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     albums = albums
                         .OrderBy(a => a.SortTitle ?? a.Title, _stringComparer)

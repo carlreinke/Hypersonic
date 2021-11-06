@@ -43,7 +43,7 @@ namespace Hypersonic.Tests
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
                     var playlist = random.AddPlaylist(user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.DeletePlaylistAsync(dbContext, user.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId + 1, CancellationToken.None).GetAwaiter().GetResult());
 
@@ -70,7 +70,7 @@ namespace Hypersonic.Tests
                     var user1 = random.AddUser();
                     var user2 = random.AddUser();
                     var playlist = random.AddPlaylist(user1, @public: false);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.DeletePlaylistAsync(dbContext, user2.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult());
 
@@ -95,7 +95,7 @@ namespace Hypersonic.Tests
                     var user1 = random.AddUser();
                     var user2 = random.AddUser();
                     var playlist = random.AddPlaylist(user1, @public: true);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     bool canDeleteAllPublicPlaylists = false;
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.DeletePlaylistAsync(dbContext, user2.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult());
@@ -128,11 +128,11 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user1, @public: true);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     bool canDeleteAllPublicPlaylists = true;
                     RestApiQueries.DeletePlaylistAsync(dbContext, user2.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     Assert.False(dbContext.Playlists.Any(p => p.PlaylistId == playlist.PlaylistId));
                 }
@@ -161,11 +161,11 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user, playlistIsPublic);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     bool canDeleteAllPublicPlaylists = true;
                     RestApiQueries.DeletePlaylistAsync(dbContext, user.UserId, canDeleteAllPublicPlaylists, playlist.PlaylistId, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     Assert.False(dbContext.Playlists.Any(p => p.PlaylistId == playlist.PlaylistId));
                 }

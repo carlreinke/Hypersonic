@@ -49,7 +49,7 @@ namespace Hypersonic.Tests
                     var library = random.AddLibrary();
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId + 1, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult());
@@ -79,7 +79,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult());
@@ -109,7 +109,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -155,7 +155,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -189,7 +189,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var trackArtist = random.AddArtist();
                     var track = random.AddTrack(file, trackArtist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -231,7 +231,7 @@ namespace Hypersonic.Tests
                     var otherDirectory = random.AddDirectory(library);
                     var otherFile = random.AddFile(otherDirectory);
                     var otherTrack = random.AddTrack(otherFile, artist, otherAlbum);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     string transcodedContentType = "audio/mpeg";
@@ -317,7 +317,7 @@ namespace Hypersonic.Tests
                     trackArtist.Name = null;
                     trackArtist.SortName = null;
                     var track = random.AddTrack(file, trackArtist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -349,7 +349,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     track.TrackNumber = null;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -379,7 +379,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -410,7 +410,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     track.Date = null;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -440,7 +440,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -473,7 +473,7 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album, genre: null);
                     var trackGenre = random.AddTrackGenre(track, genre);
                     track.Genre = null;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -506,7 +506,7 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album, genre: genre);
                     var trackGenre = random.AddTrackGenre(track, genre);
                     var trackOtherGenre = random.AddTrackGenre(track, otherGenre);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -536,7 +536,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     track.Duration = null;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -566,7 +566,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -597,7 +597,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     track.BitRate = null;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -627,7 +627,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -658,7 +658,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     track.DiscNumber = null;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -688,7 +688,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -718,7 +718,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -749,7 +749,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var trackStar = random.AddTrackStar(track, user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     string transcodedSuffix = "mp3";
                     var result = RestApiQueries.GetAlbumAsync(dbContext, user.UserId, album.AlbumId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
@@ -818,7 +818,7 @@ namespace Hypersonic.Tests
                             }
                         }
                     }
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     tracks = tracks
                         .OrderBy(t => t.DiscNumber ?? int.MaxValue)

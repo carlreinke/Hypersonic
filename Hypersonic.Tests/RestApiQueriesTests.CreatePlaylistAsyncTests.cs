@@ -41,13 +41,13 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     const string playlistName = "playlistName";
 
                     int playlistId = RestApiQueries.CreatePlaylistAsync(dbContext, user.UserId, playlistName, CancellationToken.None).GetAwaiter().GetResult();
                     var playlists = dbContext.Playlists.Local.Where(p => p.PlaylistId == playlistId).ToArray();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var playlist = Assert.Single(playlists);
                     Assert.Equal(user.UserId, playlist.UserId);

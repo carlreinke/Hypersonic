@@ -42,12 +42,12 @@ namespace Hypersonic.Tests
                     var user = random.AddUser();
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     for (int i = 0; i < 2; ++i)
                     {
                         RestApiQueries.StarAlbumAsync(dbContext, user.UserId, album.AlbumId, CancellationToken.None).GetAwaiter().GetResult();
-                        dbContext.SaveChanges();
+                        _ = dbContext.SaveChanges();
 
                         Assert.True(dbContext.AlbumStars.Any(s => s.AlbumId == album.AlbumId && s.UserId == user.UserId));
                     }

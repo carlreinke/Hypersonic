@@ -40,7 +40,7 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var ex = Assert.Throws<RestApiErrorException>(() =>
                     {
@@ -77,7 +77,7 @@ namespace Hypersonic.Tests
 
                     int userId = RestApiQueries.CreateUserAsync(dbContext, username, password, isAdmin, isGuest, canJukebox, CancellationToken.None).GetAwaiter().GetResult();
                     var users = dbContext.Users.Local.Where(u => u.UserId == userId).ToArray();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var user = Assert.Single(users);
                     Assert.Equal(username, user.Name);

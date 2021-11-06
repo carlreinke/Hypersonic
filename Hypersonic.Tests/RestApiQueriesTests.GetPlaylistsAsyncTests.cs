@@ -47,7 +47,7 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(trackFile, artist, album);
                     var playlist = random.AddPlaylist(user);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetPlaylistsAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
 

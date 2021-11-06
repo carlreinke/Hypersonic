@@ -43,7 +43,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var picture = random.AddPicture(file);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash + 1, CancellationToken.None).GetAwaiter().GetResult());
                     Assert.Equal(RestApiErrorException.DataNotFoundError().Message, ex.Message);
@@ -67,7 +67,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var picture = random.AddPicture(file);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -94,7 +94,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var picture = random.AddPicture(file);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).GetAwaiter().GetResult());
                     Assert.Equal(RestApiErrorException.DataNotFoundError().Message, ex.Message);
@@ -119,7 +119,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var picture = random.AddPicture(file);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -146,7 +146,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var picture = random.AddPicture(file);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -176,7 +176,7 @@ namespace Hypersonic.Tests
                     var otherFile = random.AddFile(directory);
                     var otherPicture = random.AddPicture(otherFile);
                     otherPicture.StreamHash = picture.StreamHash;
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, picture.StreamHash, CancellationToken.None).GetAwaiter().GetResult();
 
@@ -207,7 +207,7 @@ namespace Hypersonic.Tests
                     var accessibleDirectory = random.AddDirectory(accessibleLibrary);
                     var accessibleFile = random.AddFile(accessibleDirectory);
                     var accessiblePicture = random.AddPicture(accessibleFile);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetCoverArtStreamInfoAsync(dbContext, user.UserId, accessiblePicture.StreamHash, CancellationToken.None).GetAwaiter().GetResult();
 

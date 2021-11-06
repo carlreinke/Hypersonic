@@ -51,7 +51,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId, track.TrackId + 1 };
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.AddPlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, trackIds, CancellationToken.None).GetAwaiter().GetResult());
@@ -82,7 +82,7 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId };
                     var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.AddPlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, trackIds, CancellationToken.None).GetAwaiter().GetResult());
@@ -114,11 +114,11 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId };
                     RestApiQueries.AddPlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var playlistTracks = dbContext.PlaylistTracks
                         .Where(pt => pt.PlaylistId == playlist.PlaylistId)
@@ -148,11 +148,11 @@ namespace Hypersonic.Tests
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId };
                     RestApiQueries.AddPlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var playlistTracks = dbContext.PlaylistTracks
                         .Where(pt => pt.PlaylistId == playlist.PlaylistId)
@@ -204,11 +204,11 @@ namespace Hypersonic.Tests
                         var track = random.AddTrack(file, artist, album);
                         tracksToAdd.Add(track);
                     }
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIdsToAdd = tracksToAdd.Select(t => t.TrackId).ToArray();
                     RestApiQueries.AddPlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, trackIdsToAdd, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] expectedTrackIds = tracks.Concat(tracksToAdd).Select(t => t.TrackId).ToArray();
 
@@ -241,10 +241,10 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(file, artist, album);
                     var playlist = random.AddPlaylist(user);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     RestApiQueries.AddPlaylistSongsAsync(dbContext, user.UserId, playlist.PlaylistId, new[] { track.TrackId }, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var playlistTracks = dbContext.PlaylistTracks
                         .Where(pt => pt.PlaylistId == playlist.PlaylistId)

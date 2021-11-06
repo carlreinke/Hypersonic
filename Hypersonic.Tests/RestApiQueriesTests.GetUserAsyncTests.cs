@@ -40,7 +40,7 @@ namespace Hypersonic.Tests
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
                     var library = random.AddLibrary();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetUserAsync(dbContext, user.Name, CancellationToken.None).GetAwaiter().GetResult();
 

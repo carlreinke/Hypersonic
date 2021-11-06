@@ -45,7 +45,7 @@ namespace Hypersonic.Tests
                     var library2 = random.AddLibrary();
                     random.AddLibraryUser(library2, user1);
                     random.AddLibraryUser(library2, user2);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetUsersAsync(dbContext, CancellationToken.None).GetAwaiter().GetResult();
 

@@ -49,7 +49,7 @@ namespace Hypersonic.Tests
                     var user = random.AddUser();
                     var library = random.AddLibrary();
                     var directory = random.AddDirectory(library);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetMusicFoldersAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
 

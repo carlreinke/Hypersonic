@@ -49,7 +49,7 @@ namespace Hypersonic.Tests
                     var artistStar = random.AddArtistStar(artist, user);
                     var albumStar = random.AddAlbumStar(album, user);
                     var trackStar = random.AddTrackStar(track, user);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetStarred2Async(dbContext, user.UserId, null, "opus", CancellationToken.None).GetAwaiter().GetResult();
 

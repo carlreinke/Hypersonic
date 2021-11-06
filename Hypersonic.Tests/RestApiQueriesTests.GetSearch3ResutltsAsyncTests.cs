@@ -45,7 +45,7 @@ namespace Hypersonic.Tests
                     var artist = random.AddArtist();
                     var album = random.AddAlbum(artist);
                     var track = random.AddTrack(trackFile, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetSearch3ResultsAsync(dbContext, user.UserId, null, artist.Name, 0, 10, 0, 10, 0, 10, "opus", CancellationToken.None).GetAwaiter().GetResult();
 

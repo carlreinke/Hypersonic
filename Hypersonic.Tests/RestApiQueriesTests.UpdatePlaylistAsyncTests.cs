@@ -48,10 +48,10 @@ namespace Hypersonic.Tests
                     var track = random.AddTrack(trackFile, artist, album);
                     var playlist = random.AddPlaylist(user);
                     var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     RestApiQueries.UpdatePlaylistAsync(dbContext, user.UserId, playlist.PlaylistId, "playlistName", null, null, CancellationToken.None).GetAwaiter().GetResult();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     Assert.True(dbContext.Playlists.Any(p => p.PlaylistId == playlist.PlaylistId && p.Name == "playlistName"));
                 }

@@ -40,7 +40,7 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = Array.Empty<int>();
                     bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
@@ -68,7 +68,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new int[] { track.TrackId, track.TrackId + 1 };
                     bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
@@ -96,7 +96,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId };
                     bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
@@ -125,7 +125,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId };
                     bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
@@ -153,7 +153,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId };
                     bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
@@ -181,7 +181,7 @@ namespace Hypersonic.Tests
                     var directory = random.AddDirectory(library);
                     var file = random.AddFile(directory);
                     var track = random.AddTrack(file, artist, album);
-                    dbContext.SaveChanges();
+                    _ = dbContext.SaveChanges();
 
                     int[] trackIds = new[] { track.TrackId, track.TrackId };
                     bool result = RestApiQueries.CanAddTracksAsync(dbContext, user.UserId, trackIds, CancellationToken.None).GetAwaiter().GetResult();
