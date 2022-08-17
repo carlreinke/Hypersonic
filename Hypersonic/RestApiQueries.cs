@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License along with this program.  If
 // not, see <https://www.gnu.org/licenses/>.
 //
+extern alias IxAsync;
 using Hypersonic.Data;
+using IxAsync::System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Extensions.Internal;
 using System;
@@ -126,10 +128,11 @@ namespace Hypersonic
                 .Select(async g => new Subsonic.IndexID3()
                 {
                     name = g.Key.ToString(CultureInfo.CurrentCulture),
-                    artist = await g.Items.Select(e => e.Item).ToArray(cancellationToken).ConfigureAwait(false),
+                    artist = await g.Items
+                        .Select(e => e.Item)
+                        .ToArray(cancellationToken).ConfigureAwait(false),
                 })
                 .ToArray(cancellationToken).ConfigureAwait(false)).ConfigureAwait(false);
-
 
             if (indexes.Length == 0 &&
                 musicFolderId != null &&
@@ -1885,7 +1888,7 @@ namespace Hypersonic
 
         internal static async Task SetAllUserLibrariesAsync(MediaInfoContext dbContext, int userId, CancellationToken cancellationToken)
         {
-            IAsyncEnumerable<int> libraryIds = dbContext.Libraries
+            IxAsync::System.Collections.Generic.IAsyncEnumerable<int> libraryIds = dbContext.Libraries
                 .Select(l => l.LibraryId)
                 .AsAsyncEnumerable();
 
