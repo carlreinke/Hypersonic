@@ -26,6 +26,16 @@ namespace Hypersonic.Tests
     {
         public static class GetPlaylistsAsyncTests
         {
+            // TODO: GetPlaylistsAsync_Always_ReturnsExpectedPlaylistDetails
+
+            // TODO: GetPlaylistsAsync_PrivatePlaylistOwnedByOtherUser_PlaylistIsNotReturned
+
+            // TODO: GetPlaylistsAsync_PublicPlaylistOwnedByOtherUser_PlaylistIsReturned
+
+            // TODO: GetPlaylistsAsync_PlaylistOwnedByThisUser_PlaylistIsReturned
+
+            // TODO: GetPlaylistsAsync_Always_PlaylistsAreInExpectedOrder
+
             [Fact]
             public static void TestGetPlaylistsAsync()
             {

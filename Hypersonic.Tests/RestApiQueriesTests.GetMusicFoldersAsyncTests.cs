@@ -16,6 +16,8 @@
 //
 using Hypersonic.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Xunit;
 using static Hypersonic.Tests.Helpers;
@@ -26,16 +28,11 @@ namespace Hypersonic.Tests
     {
         public static class GetMusicFoldersAsyncTests
         {
-            // TODO: GetMusicFoldersAsync_Always_ReturnsExpectedLibraryDetails
-
-            // TODO: GetMusicFoldersAsync_LibraryIsInaccessible_LibraryIsNotReturned
-
-            // TODO: GetMusicFoldersAsync_LibraryIsAccessibleAccessControlled_LibraryIsReturned
-
-            // TODO: GetMusicFoldersAsync_LibraryIsAccessibleNonAccessControlled_LibraryIsReturned
-
-            [Fact]
-            public static void TestGetMusicFoldersAsync()
+            [Theory]
+            [InlineData(0)]
+            [InlineData(1)]
+            [InlineData(2)]
+            public static void GetMusicFoldersAsync_Always_ReturnsExpectedLibraryDetails(int libraryCount)
             {
                 var dbConnection = OpenSqliteDatabase();
 
@@ -47,17 +44,138 @@ namespace Hypersonic.Tests
                 {
                     var random = new RandomPopulator(dbContext);
                     var user = random.AddUser();
-                    var library = random.AddLibrary();
-                    var directory = random.AddDirectory(library);
+                    var libraries = new List<Library>();
+                    for (int i = 0; i < libraryCount; ++i)
+                    {
+                        var library = random.AddLibrary();
+                        libraries.Add(library);
+                    }
                     _ = dbContext.SaveChanges();
 
                     var result = RestApiQueries.GetMusicFoldersAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
 
-                    Assert.NotNull(result);
-                    Assert.NotNull(result.musicFolder);
-                    Assert.Single(result.musicFolder);
-                    Assert.Equal(library.LibraryId, result.musicFolder[0].id);
-                    Assert.Equal(library.Name, result.musicFolder[0].name);
+                    Assert.Equal(libraries.Count, result.musicFolder.Length);
+                    Assert.Equal(new SortedSet<int>(libraries.Select(l => l.LibraryId)),
+                                 new SortedSet<int>(result.musicFolder.Select(l => l.id)));
+                    foreach (var resultMusicFolder in result.musicFolder)
+                    {
+                        var library = libraries.Single(l => l.LibraryId == resultMusicFolder.id);
+
+                        Assert.Equal(library.Name, resultMusicFolder.name);
+                    }
+                }
+            }
+
+            [Fact]
+            public static void GetMusicFoldersAsync_LibraryIsInaccessible_LibraryIsNotReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var inaccessibleLibrary = random.AddLibrary(accessControlled: true);
+                    var accessibleLibrary = random.AddLibrary(accessControlled: false);
+                    _ = dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetMusicFoldersAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultMusicFolder = Assert.Single(result.musicFolder);
+                    Assert.Equal(accessibleLibrary.LibraryId, resultMusicFolder.id);
+                }
+            }
+
+            [Fact]
+            public static void GetMusicFoldersAsync_LibraryIsAccessibleAccessControlled_LibraryIsReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: true);
+                    var libraryUser = random.AddLibraryUser(library, user);
+                    _ = dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetMusicFoldersAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultMusicFolder = Assert.Single(result.musicFolder);
+                    Assert.Equal(library.LibraryId, resultMusicFolder.id);
+                }
+            }
+
+            [Fact]
+            public static void GetMusicFoldersAsync_LibraryIsAccessibleNonAccessControlled_LibraryIsReturned()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary(accessControlled: false);
+                    _ = dbContext.SaveChanges();
+
+                    var result = RestApiQueries.GetMusicFoldersAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var resultMusicFolder = Assert.Single(result.musicFolder);
+                    Assert.Equal(library.LibraryId, resultMusicFolder.id);
+                }
+            }
+
+            [Fact]
+            public static void GetMusicFoldersAsync_Always_LibrariesAreInExpectedOrder()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var libraries = new List<Library>();
+                    var user = random.AddUser();
+                    foreach (string genreName in new[]
+                        {
+                            "A",
+                            "a",
+                            "C",
+                            "𝓏",
+                            "𓂀",
+                            "B",
+                            "b",
+                        })
+                    {
+                        var library = random.AddLibrary();
+                        library.Name = genreName;
+                        libraries.Add(library);
+                    }
+                    _ = dbContext.SaveChanges();
+
+                    libraries = libraries
+                        .OrderBy(g => g.Name, _stringComparer)
+                        .ToList();
+
+                    var result = RestApiQueries.GetMusicFoldersAsync(dbContext, user.UserId, CancellationToken.None).GetAwaiter().GetResult();
+
+                    Assert.Equal(libraries.Select(g => g.Name).ToArray(),
+                                 result.musicFolder.Select(g => g.name).ToArray());
                 }
             }
         }

@@ -16,6 +16,8 @@
 //
 using Hypersonic.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
 using System.Threading;
 using Xunit;
 using static Hypersonic.Tests.Helpers;
@@ -26,6 +28,90 @@ namespace Hypersonic.Tests
     {
         public static class GetPlaylistAsyncTests
         {
+            [Fact]
+            public static void GetPlaylistAsync_PlaylistDoesNotExist_ThrowsDataNotFoundError()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    var playlist = random.AddPlaylist(user);
+                    var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
+                    _ = dbContext.SaveChanges();
+
+                    string transcodedSuffix = "mp3";
+                    var ex = Assert.Throws<RestApiErrorException>(() => RestApiQueries.GetPlaylistAsync(dbContext, user.UserId, playlist.PlaylistId + 1, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult());
+
+                    var expectedException = RestApiErrorException.DataNotFoundError();
+                    Assert.Equal(expectedException.Message, ex.Message);
+                    Assert.Equal(expectedException.Code, ex.Code);
+                }
+            }
+
+            [Fact]
+            public static void GetPlaylistAsync_Always_ReturnsExpectedPlaylistDetails()
+            {
+                var dbConnection = OpenSqliteDatabase();
+
+                var dbContextOptionsBuilder = new DbContextOptionsBuilder<MediaInfoContext>()
+                    .DisableClientSideEvaluation()
+                    .UseSqlite(dbConnection);
+
+                using (var dbContext = new MediaInfoContext(dbContextOptionsBuilder.Options))
+                {
+                    var random = new RandomPopulator(dbContext);
+                    var user = random.AddUser();
+                    var library = random.AddLibrary();
+                    var artist = random.AddArtist();
+                    var album = random.AddAlbum(artist);
+                    var directory = random.AddDirectory(library);
+                    var file = random.AddFile(directory);
+                    var track = random.AddTrack(file, artist, album);
+                    var playlist = random.AddPlaylist(user);
+                    var playlistTrack = random.AddPlaylistTrack(playlist, track, 0);
+                    _ = dbContext.SaveChanges();
+
+                    string transcodedSuffix = "mp3";
+                    var result = RestApiQueries.GetPlaylistAsync(dbContext, user.UserId, playlist.PlaylistId, transcodedSuffix, CancellationToken.None).GetAwaiter().GetResult();
+
+                    var tracks = new[] { track };
+
+                    Assert.Equal("p" + playlist.PlaylistId, result.id);
+                    Assert.Equal(playlist.Name, result.name);
+                    Assert.Equal(playlist.Description, result.comment);
+                    Assert.Equal(playlist.User.Name, result.owner);
+                    Assert.Equal(playlist.IsPublic, result.@public);
+                    Assert.True(result.publicSpecified);
+                    Assert.Equal(tracks.Length, result.songCount);
+                    Assert.Equal(Math.Round(tracks.Sum(p => p.Duration) ?? 0), result.duration);
+                    Assert.Equal(playlist.Created, result.created);
+                    Assert.Equal(playlist.Modified, result.changed);
+                    Assert.Null(result.coverArt);
+                }
+            }
+
+            // TODO: GetPlaylistAsync_PrivatePlaylistOwnedByOtherUser_ThrowsDataNotFoundError
+
+            // TODO: GetPlaylistAsync_PublicPlaylistOwnedByOtherUser_PlaylistIsReturned
+
+            // TODO: GetPlaylistAsync_PlaylistOwnedByThisUser_PlaylistIsReturned
+
+            // TODO: GetPlaylistAsync_Track...
+
+            // TODO: GetPlaylistAsync_Always_TracksAreInExpectedOrder
+
             [Fact]
             public static void TestGetPlaylistAsync()
             {
